@@ -315,7 +315,7 @@ class XPM_Image_SEO_Admin {
                 <?php settings_fields('xpm_image_seo_settings'); ?>
                 
                 <!-- Alt Text Tab -->
-                <div id="alt_text_content" class="xpm-tab-content <?php echo $active_tab == 'alt_text' ? 'active' : ''; ?>" style="<?php echo $active_tab == 'alt_text' ? 'display: block;' : 'display: none;'; ?>">
+                <div id="alt_text_content" class="xpm-tab-content <?php echo $active_tab == 'alt_text' ? 'active' : ''; ?>">
                     <h2><?php _e('Alt Text Generation Settings', 'xpm-image-seo'); ?></h2>
                     <table class="form-table">
                         <tr>
@@ -417,7 +417,7 @@ class XPM_Image_SEO_Admin {
                 </div>
                 
                 <!-- Optimization Tab -->
-                <div id="optimization_content" class="xpm-tab-content <?php echo $active_tab == 'optimization' ? 'active' : ''; ?>" style="<?php echo $active_tab == 'optimization' ? 'display: block;' : 'display: none;'; ?>">
+                <div id="optimization_content" class="xpm-tab-content <?php echo $active_tab == 'optimization' ? 'active' : ''; ?>">
                     <h2><?php _e('Image Optimization Settings', 'xpm-image-seo'); ?></h2>
                     <table class="form-table">
                         <tr>
@@ -487,7 +487,7 @@ class XPM_Image_SEO_Admin {
                 </div>
                 
                 <!-- Performance Tab -->
-                <div id="performance_content" class="xpm-tab-content <?php echo $active_tab == 'performance' ? 'active' : ''; ?>" style="<?php echo $active_tab == 'performance' ? 'display: block;' : 'display: none;'; ?>">
+                <div id="performance_content" class="xpm-tab-content <?php echo $active_tab == 'performance' ? 'active' : ''; ?>">
                     <h2><?php _e('Performance Settings', 'xpm-image-seo'); ?></h2>
                     <table class="form-table">
                         <tr>
@@ -548,7 +548,7 @@ class XPM_Image_SEO_Admin {
                 </div>
                 
                 <!-- Post Duplicator Tab -->
-                <div id="duplicator_content" class="xpm-tab-content <?php echo $active_tab == 'duplicator' ? 'active' : ''; ?>" style="<?php echo $active_tab == 'duplicator' ? 'display: block;' : 'display: none;'; ?>">
+                <div id="duplicator_content" class="xpm-tab-content <?php echo $active_tab == 'duplicator' ? 'active' : ''; ?>">
                     <h2><?php _e('Post Duplicator Settings', 'xpm-image-seo'); ?></h2>
                     <table class="form-table">
                         <tr>
@@ -614,20 +614,134 @@ class XPM_Image_SEO_Admin {
             </form>
         </div>
         
-        <!-- Inline CSS to ensure tabs work -->
-        <style>
-            .xpm-tab-content { display: none !important; }
-            .xpm-tab-content.active { display: block !important; }
+        <!-- CRITICAL: Force CSS and JavaScript to ensure tabs work -->
+        <style type="text/css">
+            /* Critical tab CSS - Force working tabs */
+            .xpm-tab-content { 
+                display: none !important; 
+                visibility: hidden !important;
+                opacity: 0;
+            }
+            .xpm-tab-content.active { 
+                display: block !important; 
+                visibility: visible !important;
+                opacity: 1;
+            }
+            
+            /* Debug helper */
+            .xpm-debug {
+                border: 2px solid red !important;
+                background: yellow !important;
+            }
         </style>
         
-        <script>
+        <script type="text/javascript">
         jQuery(document).ready(function($) {
+            console.log('=== XPM SETTINGS PAGE DEBUG START ===');
+            
             // Force hide all tabs except active on load
-            $('.xpm-tab-content').hide();
-            $('.xpm-tab-content.active').show();
+            $('.xpm-tab-content').each(function(index) {
+                var $tab = $(this);
+                var tabId = $tab.attr('id');
+                var isActive = $tab.hasClass('active');
+                
+                console.log('Tab ' + index + ': ' + tabId + ' - Active: ' + isActive);
+                
+                if (!isActive) {
+                    $tab.hide().css({
+                        'display': 'none',
+                        'visibility': 'hidden',
+                        'opacity': '0'
+                    });
+                } else {
+                    $tab.show().css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                }
+            });
             
             console.log('Settings page loaded, active tab should be visible');
-            console.log('Active tab:', '<?php echo esc_js($active_tab); ?>');
+            console.log('Active tab: <?php echo esc_js($active_tab); ?>');
+            console.log('Found tabs: ' + $('.xpm-tab-content').length);
+            console.log('Visible tabs: ' + $('.xpm-tab-content:visible').length);
+            
+            // Tab click handlers with debugging
+            $('.xpm-nav-tab-wrapper .nav-tab').off('click.debug').on('click.debug', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var $clickedTab = $(this);
+                var targetTab = $clickedTab.data('tab');
+                
+                console.log('=== TAB CLICK DEBUG ===');
+                console.log('Clicked tab:', targetTab);
+                console.log('Tab element:', $clickedTab[0]);
+                console.log('Data-tab attribute:', $clickedTab.attr('data-tab'));
+                
+                if (!targetTab) {
+                    console.error('ERROR: No data-tab attribute found!');
+                    return false;
+                }
+                
+                // Hide all tabs
+                $('.xpm-tab-content').each(function() {
+                    $(this).removeClass('active').hide().css({
+                        'display': 'none',
+                        'visibility': 'hidden',
+                        'opacity': '0'
+                    });
+                });
+                
+                // Remove all active nav classes
+                $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
+                
+                // Show target tab
+                var $targetContent = $('#' + targetTab + '_content');
+                console.log('Target content element:', $targetContent.length);
+                
+                if ($targetContent.length > 0) {
+                    $targetContent.addClass('active').show().css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                    
+                    console.log('SUCCESS: Tab content shown for:', targetTab);
+                } else {
+                    console.error('ERROR: Tab content not found for:', targetTab);
+                }
+                
+                // Set active nav tab
+                $clickedTab.addClass('nav-tab-active');
+                
+                console.log('=== TAB CLICK DEBUG END ===');
+                
+                return false;
+            });
+            
+            // Force show the active tab after a brief delay
+            setTimeout(function() {
+                var activeTab = '<?php echo esc_js($active_tab); ?>';
+                var $activeContent = $('#' + activeTab + '_content');
+                
+                console.log('Forcing active tab visibility check...');
+                console.log('Active tab:', activeTab);
+                console.log('Active content element:', $activeContent.length);
+                console.log('Is visible:', $activeContent.is(':visible'));
+                
+                if ($activeContent.length > 0 && !$activeContent.is(':visible')) {
+                    console.log('FORCING tab to be visible...');
+                    $activeContent.addClass('active').show().css({
+                        'display': 'block',
+                        'visibility': 'visible',
+                        'opacity': '1'
+                    });
+                }
+            }, 500);
+            
+            console.log('=== XPM SETTINGS PAGE DEBUG END ===');
         });
         </script>
         <?php
@@ -866,203 +980,5 @@ class XPM_Image_SEO_Admin {
      */
     private function get_blur_placeholder() {
         return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPgo8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjRjBGMEYwIi8+CjxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjRTBFMEUwIi8+CjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI0YwRjBGMCIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+CjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0idXJsKCNncmFkaWVudCkiLz4KPC9zdmc+';
-    }
-    
-    /**
-     * Get plugin statistics for admin display
-     */
-    public function get_plugin_statistics() {
-        global $wpdb;
-        
-        $stats = array();
-        
-        // Total images
-        $stats['total_images'] = $wpdb->get_var("
-            SELECT COUNT(*) 
-            FROM {$wpdb->posts} 
-            WHERE post_type = 'attachment' 
-            AND post_mime_type LIKE 'image/%'
-        ");
-        
-        // Images with alt text
-        $stats['images_with_alt'] = $wpdb->get_var("
-            SELECT COUNT(DISTINCT p.ID) 
-            FROM {$wpdb->posts} p 
-            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
-            WHERE p.post_type = 'attachment' 
-            AND p.post_mime_type LIKE 'image/%'
-            AND pm.meta_key = '_wp_attachment_image_alt' 
-            AND pm.meta_value != ''
-        ");
-        
-        // AI generated alt text
-        $stats['ai_generated'] = $wpdb->get_var("
-            SELECT COUNT(*) 
-            FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_xpm_alt_text_generated'
-        ");
-        
-        // Optimized images
-        $stats['optimized_images'] = $wpdb->get_var("
-            SELECT COUNT(*) 
-            FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_xpm_optimized' 
-            AND meta_value = '1'
-        ");
-        
-        // Total bytes saved
-        $stats['bytes_saved'] = $wpdb->get_var("
-            SELECT SUM(CAST(meta_value AS UNSIGNED)) 
-            FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_xpm_bytes_saved'
-        ");
-        
-        // Recent duplicates (last 30 days)
-        $stats['recent_duplicates'] = $wpdb->get_var("
-            SELECT COUNT(*) 
-            FROM {$wpdb->posts} 
-            WHERE post_title LIKE '%Copy%' 
-            AND post_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            AND post_status != 'trash'
-        ");
-        
-        return $stats;
-    }
-    
-    /**
-     * Handle settings validation errors
-     */
-    public function handle_settings_errors() {
-        $errors = get_settings_errors('xpm_image_seo_settings');
-        
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                echo '<div class="notice notice-error is-dismissible">';
-                echo '<p><strong>' . esc_html($error['message']) . '</strong></p>';
-                echo '</div>';
-            }
-        }
-    }
-    
-    /**
-     * Export settings for backup
-     */
-    public function export_settings() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'xpm-image-seo'));
-        }
-        
-        $options = get_option($this->option_name);
-        $export_data = array(
-            'version' => XPM_IMAGE_SEO_VERSION,
-            'export_date' => current_time('mysql'),
-            'settings' => $options
-        );
-        
-        header('Content-Type: application/json');
-        header('Content-Disposition: attachment; filename="xpm-image-seo-settings-' . date('Y-m-d') . '.json"');
-        
-        echo json_encode($export_data, JSON_PRETTY_PRINT);
-        exit;
-    }
-    
-    /**
-     * Import settings from backup
-     */
-    public function import_settings($import_data) {
-        if (!current_user_can('manage_options')) {
-            return false;
-        }
-        
-        $data = json_decode($import_data, true);
-        
-        if (!$data || !isset($data['settings'])) {
-            return false;
-        }
-        
-        // Validate imported settings
-        $sanitized_settings = $this->sanitize_settings($data['settings']);
-        
-        // Update options
-        update_option($this->option_name, $sanitized_settings);
-        
-        return true;
-    }
-    
-    /**
-     * Reset settings to defaults
-     */
-    public function reset_settings() {
-        if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'xpm-image-seo'));
-        }
-        
-        $default_options = array(
-            // Alt Text Settings
-            'api_key' => '',
-            'global_keywords' => '',
-            'use_contextual_keywords' => 1,
-            'keyword_priority' => 'contextual_first',
-            'max_keywords' => 3,
-            'auto_generate' => 0,
-            'prompt' => '',
-            'update_title' => 1,
-            'update_description' => 1,
-            'skip_existing' => 1,
-            
-            // Image Optimization Settings
-            'auto_optimize' => 1,
-            'compression_quality' => 85,
-            'max_width' => 2048,
-            'max_height' => 2048,
-            'backup_originals' => 1,
-            'convert_to_webp' => 0,
-            
-            // Performance Settings
-            'enable_lazy_loading' => 0,
-            'lazy_loading_threshold' => 200,
-            'lazy_loading_placeholder' => 'blur',
-            'lazy_loading_custom_placeholder' => '',
-            'lazy_loading_effect' => 'fade',
-            
-            // Post Duplicator Settings
-            'enable_post_duplicator' => 1,
-            'duplicate_status' => 'draft',
-            'duplicate_author' => 'current',
-            'duplicate_suffix' => 'Copy'
-        );
-        
-        update_option($this->option_name, $default_options);
-        
-        add_settings_error('xpm_image_seo_settings', 'settings_reset', 
-            __('Settings have been reset to defaults.', 'xpm-image-seo'), 'updated');
-    }
-    
-    /**
-     * Get system information for debugging
-     */
-    public function get_system_info() {
-        global $wpdb;
-        
-        $info = array(
-            'WordPress Version' => get_bloginfo('version'),
-            'PHP Version' => PHP_VERSION,
-            'MySQL Version' => $wpdb->db_version(),
-            'Plugin Version' => XPM_IMAGE_SEO_VERSION,
-            'Memory Limit' => ini_get('memory_limit'),
-            'Max Execution Time' => ini_get('max_execution_time'),
-            'Upload Max Filesize' => ini_get('upload_max_filesize'),
-            'Post Max Size' => ini_get('post_max_size'),
-            'cURL Available' => function_exists('curl_init') ? 'Yes' : 'No',
-            'Imagick Available' => extension_loaded('imagick') ? 'Yes' : 'No',
-            'GD Available' => extension_loaded('gd') ? 'Yes' : 'No',
-            'WebP Support' => function_exists('imagewebp') ? 'Yes' : 'No',
-            'Allow URL fopen' => ini_get('allow_url_fopen') ? 'Yes' : 'No',
-            'WordPress Debug' => defined('WP_DEBUG') && WP_DEBUG ? 'Enabled' : 'Disabled',
-            'Active Theme' => get_template(),
-            'Active Plugins' => implode(', ', get_option('active_plugins', array()))
-        );
-        
-        return $info;
     }
 }

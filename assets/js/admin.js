@@ -4,11 +4,15 @@
 jQuery(document).ready(function($) {
     'use strict';
     
+    console.log('XPM Image SEO: Starting initialization');
+    
     // Determine current page
-    const currentPage = xpmImageSeo.current_page;
+    const currentPage = (typeof xpmImageSeo !== 'undefined') ? xpmImageSeo.current_page : '';
+    console.log('Current page:', currentPage);
     
     // Initialize tab functionality for settings page
     if (currentPage === 'settings_page_xpm-image-seo-settings') {
+        console.log('Initializing settings tabs');
         initializeSettingsTabs();
     }
     
@@ -24,32 +28,73 @@ jQuery(document).ready(function($) {
     function initializeSettingsTabs() {
         console.log('XPM Image SEO: Initializing settings tabs');
         
+        // Force initial CSS to ensure tabs work
+        $('<style>').text(`
+            .xpm-tab-content { 
+                display: none !important; 
+                visibility: hidden !important;
+            }
+            .xpm-tab-content.active { 
+                display: block !important; 
+                visibility: visible !important;
+            }
+        `).appendTo('head');
+        
         // Get current tab from URL or default to alt_text
         const urlParams = new URLSearchParams(window.location.search);
         const currentTab = urlParams.get('tab') || 'alt_text';
         
         console.log('Initial tab:', currentTab);
         
-        // Force initial tab display
+        // Force initial tab display immediately
         showTab(currentTab);
         
-        // Tab switching functionality - prevent default completely
-        $('.xpm-nav-tab-wrapper .nav-tab').off('click').on('click', function(e) {
+        // Ensure tabs exist before binding events
+        const $navTabs = $('.xpm-nav-tab-wrapper .nav-tab');
+        const $tabContents = $('.xpm-tab-content');
+        
+        console.log('Found nav tabs:', $navTabs.length);
+        console.log('Found tab contents:', $tabContents.length);
+        
+        if ($navTabs.length === 0) {
+            console.error('No navigation tabs found!');
+            return;
+        }
+        
+        if ($tabContents.length === 0) {
+            console.error('No tab content elements found!');
+            return;
+        }
+        
+        // Remove any existing handlers and bind new ones
+        $navTabs.off('click.xpm').on('click.xpm', function(e) {
+            console.log('Tab clicked');
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
             
-            const targetTab = $(this).data('tab');
+            const $clickedTab = $(this);
+            const targetTab = $clickedTab.data('tab');
+            
             console.log('Switching to tab:', targetTab);
+            
+            if (!targetTab) {
+                console.error('No data-tab attribute found on clicked element');
+                return false;
+            }
             
             // Show the tab
             showTab(targetTab);
             
             // Update URL without page reload
-            if (history.replaceState) {
-                const url = new URL(window.location);
-                url.searchParams.set('tab', targetTab);
-                window.history.replaceState({}, '', url);
+            try {
+                if (history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.set('tab', targetTab);
+                    window.history.replaceState({}, '', url);
+                }
+            } catch (error) {
+                console.log('Could not update URL:', error);
             }
             
             return false;
@@ -111,30 +156,56 @@ jQuery(document).ready(function($) {
     function showTab(tabName) {
         console.log('Showing tab:', tabName);
         
-        // Force hide ALL tab contents
-        $('.xpm-tab-content').each(function() {
-            $(this).removeClass('active').hide().css('display', 'none');
-        });
-        
-        // Remove all active nav classes
-        $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
-        
-        // Show target tab content
-        const $targetContent = $('#' + tabName + '_content');
-        if ($targetContent.length > 0) {
-            $targetContent.addClass('active').show().css('display', 'block');
-            console.log('Tab content shown for:', tabName);
-        } else {
-            console.error('Tab content not found for:', tabName);
-            // Fallback to first tab
-            $('.xpm-tab-content').first().addClass('active').show().css('display', 'block');
-            tabName = 'alt_text';
+        try {
+            // Force hide ALL tab contents first
+            $('.xpm-tab-content').each(function() {
+                $(this).removeClass('active')
+                       .hide()
+                       .css({
+                           'display': 'none',
+                           'visibility': 'hidden'
+                       });
+            });
+            
+            // Remove all active nav classes
+            $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
+            
+            // Show target tab content
+            const $targetContent = $('#' + tabName + '_content');
+            console.log('Target content element:', $targetContent.length);
+            
+            if ($targetContent.length > 0) {
+                $targetContent.addClass('active')
+                             .show()
+                             .css({
+                                 'display': 'block',
+                                 'visibility': 'visible'
+                             });
+                console.log('Tab content shown for:', tabName);
+            } else {
+                console.error('Tab content not found for:', tabName);
+                // Fallback to first available tab
+                const $firstTab = $('.xpm-tab-content').first();
+                if ($firstTab.length > 0) {
+                    $firstTab.addClass('active')
+                             .show()
+                             .css({
+                                 'display': 'block',
+                                 'visibility': 'visible'
+                             });
+                    tabName = $firstTab.attr('id').replace('_content', '');
+                    console.log('Fallback to first tab:', tabName);
+                }
+            }
+            
+            // Set active nav tab
+            $('.xpm-nav-tab-wrapper .nav-tab[data-tab="' + tabName + '"]').addClass('nav-tab-active');
+            
+            console.log('Active tab set to:', tabName);
+            
+        } catch (error) {
+            console.error('Error in showTab:', error);
         }
-        
-        // Set active nav tab
-        $('.xpm-nav-tab-wrapper .nav-tab[data-tab="' + tabName + '"]').addClass('nav-tab-active');
-        
-        console.log('Active tab set to:', tabName);
     }
     
     /**
@@ -934,5 +1005,33 @@ jQuery(document).ready(function($) {
         }
     } else {
         console.error('XPM Image SEO: JavaScript configuration not loaded');
+        console.log('Attempting to initialize anyway...');
+        
+        // Fallback initialization for settings page
+        if (window.location.href.indexOf('xpm-image-seo-settings') !== -1) {
+            setTimeout(function() {
+                console.log('Fallback initialization for settings page');
+                initializeSettingsTabs();
+            }, 500);
+        }
     }
+    
+    // Additional debugging
+    console.log('Available tabs on page:', $('.nav-tab').length);
+    console.log('Available tab contents on page:', $('.xpm-tab-content').length);
+    
+    // Force show first tab if none are visible after 1 second
+    setTimeout(function() {
+        const $visibleTabs = $('.xpm-tab-content:visible');
+        if ($visibleTabs.length === 0) {
+            console.log('No tabs visible, forcing first tab to show');
+            const $firstTab = $('.xpm-tab-content').first();
+            if ($firstTab.length > 0) {
+                $firstTab.addClass('active').show().css('display', 'block');
+                const tabName = $firstTab.attr('id').replace('_content', '');
+                $('.nav-tab[data-tab="' + tabName + '"]').addClass('nav-tab-active');
+                console.log('Forced tab visible:', tabName);
+            }
+        }
+    }, 1000);
 });
