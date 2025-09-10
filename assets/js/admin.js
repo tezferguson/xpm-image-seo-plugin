@@ -1,5 +1,5 @@
 /**
- * XPM Image SEO Admin JavaScript - Complete Fixed Version
+ * XPM Image SEO Admin JavaScript - COMPLETE FIXED VERSION WITH WORKING TABS
  */
 jQuery(document).ready(function($) {
     'use strict';
@@ -7,10 +7,91 @@ jQuery(document).ready(function($) {
     // Determine current page
     const currentPage = xpmImageSeo.current_page;
     
+    // Initialize tab functionality for settings page
+    if (currentPage === 'settings_page_xpm-image-seo-settings') {
+        initializeSettingsTabs();
+    }
+    
     if (currentPage === 'media_page_xpm-image-seo-optimizer') {
         initializeOptimizer();
     } else if (currentPage === 'media_page_xpm-image-seo-bulk-update') {
         initializeBulkUpdate();
+    }
+    
+    /**
+     * Initialize Settings Page Tabs - NEW FUNCTION
+     */
+    function initializeSettingsTabs() {
+        console.log('XPM Image SEO: Initializing settings tabs');
+        
+        // Tab switching functionality
+        $('.xpm-nav-tab-wrapper .nav-tab').on('click', function(e) {
+            e.preventDefault();
+            
+            var targetTab = $(this).data('tab');
+            console.log('Switching to tab:', targetTab);
+            
+            // Remove active class from all tabs and content
+            $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
+            $('.xpm-tab-content').removeClass('active').hide();
+            
+            // Add active class to clicked tab and corresponding content
+            $(this).addClass('nav-tab-active');
+            $('#' + targetTab + '_content').addClass('active').show();
+            
+            // Update URL without page reload
+            if (history.replaceState) {
+                var url = new URL(window.location);
+                url.searchParams.set('tab', targetTab);
+                window.history.replaceState({}, '', url);
+            }
+        });
+        
+        // Handle form submission for settings
+        $('#xmp-settings-form').on('submit', function(e) {
+            var $submitBtn = $(this).find('input[type=submit]');
+            $submitBtn.prop('disabled', true);
+            
+            // Change button text based on active tab
+            var activeTab = $('.nav-tab-active').data('tab');
+            var buttonText = 'Saving...';
+            
+            switch(activeTab) {
+                case 'alt_text':
+                    buttonText = 'Saving Alt Text Settings...';
+                    break;
+                case 'optimization':
+                    buttonText = 'Saving Optimization Settings...';
+                    break;
+                case 'performance':
+                    buttonText = 'Saving Performance Settings...';
+                    break;
+            }
+            
+            $submitBtn.val(buttonText);
+            
+            // Re-enable after a delay (in case of error)
+            setTimeout(function() {
+                $submitBtn.prop('disabled', false).val('Save Settings');
+            }, 5000);
+        });
+        
+        // Initialize compression quality slider
+        $('.compression-slider').on('input', function() {
+            $('.quality-display').text($(this).val() + '%');
+        });
+        
+        // Initialize custom placeholder field toggle
+        $('select[name$="[lazy_loading_placeholder]"]').on('change', function() {
+            var customField = $('#custom-placeholder-field');
+            if ($(this).val() === 'custom') {
+                customField.show();
+            } else {
+                customField.hide();
+            }
+        });
+        
+        console.log('Settings tabs initialized successfully');
     }
     
     /**
@@ -801,7 +882,9 @@ jQuery(document).ready(function($) {
     if (typeof xpmImageSeo !== 'undefined') {
         console.log('XPM Image SEO: Enhanced interface loaded successfully');
         
-        if (currentPage === 'media_page_xpm-image-seo-optimizer') {
+        if (currentPage === 'settings_page_xpm-image-seo-settings') {
+            console.log('Settings page with working tabs loaded');
+        } else if (currentPage === 'media_page_xpm-image-seo-optimizer') {
             console.log('Image Optimizer module loaded');
         } else if (currentPage === 'media_page_xpm-image-seo-bulk-update') {
             console.log('Bulk Update module loaded');

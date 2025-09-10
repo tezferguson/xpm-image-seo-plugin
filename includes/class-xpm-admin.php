@@ -1,6 +1,6 @@
 <?php
 /**
- * XPM Image SEO Admin Interface - WITH TABS AND LAZY LOADING
+ * XPM Image SEO Admin Interface - SYNTAX FIXED VERSION
  * 
  * @package XPM_Image_SEO
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Admin interface functionality with tabbed interface
+ * Admin interface functionality with working tabbed interface
  */
 class XPM_Image_SEO_Admin {
     
@@ -101,426 +101,119 @@ class XPM_Image_SEO_Admin {
             XPM_IMAGE_SEO_VERSION
         );
         
-        // Add custom CSS for tabs
-        wp_add_inline_style('xpm-image-seo-admin', $this->get_tab_styles());
+        // Add working tabs for settings page
+        if ($hook === 'settings_page_xpm-image-seo-settings') {
+            $this->add_tab_functionality();
+        }
     }
     
     /**
-     * Get custom CSS for tabs
+     * Add tab functionality safely
      */
-    private function get_tab_styles() {
-        return "
-        .xpm-tabs {
-            border-bottom: 1px solid #ccd0d4;
-            margin: 0 0 20px 0;
-        }
-        .xmp-tabs ul {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            display: flex;
-        }
-        .xpm-tabs li {
-            margin: 0;
-            padding: 0;
-        }
-        .xpm-tabs a {
-            display: block;
-            padding: 12px 20px;
-            text-decoration: none;
-            color: #0073aa;
-            border: 1px solid transparent;
-            border-bottom: none;
-            background: #f1f1f1;
-            margin-right: 5px;
-            transition: all 0.3s ease;
-        }
-        .xpm-tabs a:hover {
-            background: #e1e1e1;
-            color: #005a87;
-        }
-        .xpm-tabs a.active {
-            background: #fff;
-            border-color: #ccd0d4;
-            color: #23282d;
-            font-weight: 600;
-        }
-        .xpm-tab-content {
-            display: none;
-        }
-        .xpm-tab-content.active {
-            display: block;
-        }
-        .xpm-tab-content .form-table {
-            margin-top: 20px;
-        }
-        ";
+    private function add_tab_functionality() {
+        // WooCommerce-style CSS for tabs
+        wp_add_inline_style('xpm-image-seo-admin', '
+            .nav-tab-wrapper { 
+                border-bottom: 1px solid #ccd0d4; 
+                margin: 0 0 20px; 
+                background: #f1f1f1; 
+                padding-left: 10px;
+            }
+            .nav-tab { 
+                border: 1px solid #ccd0d4; 
+                border-bottom: none; 
+                margin-left: 0.5em; 
+                margin-bottom: -1px;
+                padding: 10px 15px; 
+                background: #e4e4e4; 
+                color: #555; 
+                text-decoration: none; 
+                display: inline-block; 
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border-top-left-radius: 3px;
+                border-top-right-radius: 3px;
+            }
+            .nav-tab:hover {
+                background: #f9f9f9;
+                color: #464646;
+                border-color: #999;
+            }
+            .nav-tab-active { 
+                background: #fff; 
+                border-bottom-color: #fff; 
+                color: #000; 
+                font-weight: 600;
+                z-index: 1;
+                position: relative;
+            }
+            .tab-content { 
+                display: none; 
+                background: #fff;
+                border: 1px solid #ccd0d4;
+                border-top: none;
+                margin-top: -1px;
+                padding: 20px;
+                min-height: 400px;
+            }
+            .tab-content.active { 
+                display: block; 
+            }
+            .tab-content .form-table {
+                margin-top: 0;
+            }
+            .tab-content .submit {
+                margin: 20px 0 0 0;
+                padding-top: 20px;
+                border-top: 1px solid #ddd;
+            }
+        ');
+        
+        // JavaScript for tabs
+        wp_add_inline_script('xpm-image-seo-admin', '
+            jQuery(document).ready(function($) {
+                $(".nav-tab").on("click", function(e) {
+                    e.preventDefault();
+                    var tab = $(this).data("tab");
+                    $(".nav-tab").removeClass("nav-tab-active");
+                    $(this).addClass("nav-tab-active");
+                    $(".tab-content").removeClass("active").hide();
+                    $("#" + tab + "_content").addClass("active").show();
+                    
+                    // Update URL
+                    if (history.replaceState) {
+                        var url = new URL(window.location);
+                        url.searchParams.set("tab", tab);
+                        window.history.replaceState({}, "", url);
+                    }
+                });
+                
+                // Initialize - hide non-active tabs
+                $(".tab-content:not(.active)").hide();
+                
+                // Compression slider
+                $(".compression-slider").on("input", function() {
+                    $(this).next(".quality-display").text($(this).val() + "%");
+                });
+                
+                // Custom placeholder toggle
+                $("select[name$=\"[lazy_loading_placeholder]\"]").on("change", function() {
+                    var customField = $("#custom-placeholder-field");
+                    if ($(this).val() === "custom") {
+                        customField.show();
+                    } else {
+                        customField.hide();
+                    }
+                });
+            });
+        ');
     }
     
     /**
-     * Initialize settings with tabs
+     * Initialize settings
      */
     public function settings_init() {
         register_setting('xpm_image_seo', $this->option_name, array($this, 'sanitize_settings'));
-        
-        // ALT TEXT TAB SECTIONS
-        add_settings_section(
-            'xpm_image_seo_api_section',
-            __('OpenAI API Configuration', 'xpm-image-seo'),
-            array($this, 'api_section_callback'),
-            'xpm_image_seo_alt_text'
-        );
-        
-        add_settings_section(
-            'xpm_image_seo_keywords_section',
-            __('Smart Keywords', 'xpm-image-seo'),
-            array($this, 'keywords_section_callback'),
-            'xpm_image_seo_alt_text'
-        );
-        
-        add_settings_section(
-            'xpm_image_seo_behavior_section',
-            __('AI Behavior Settings', 'xpm-image-seo'),
-            array($this, 'behavior_section_callback'),
-            'xpm_image_seo_alt_text'
-        );
-        
-        add_settings_section(
-            'xpm_image_seo_fields_section',
-            __('Fields to Update', 'xpm-image-seo'),
-            array($this, 'fields_section_callback'),
-            'xpm_image_seo_alt_text'
-        );
-        
-        // IMAGE OPTIMIZATION TAB SECTIONS
-        add_settings_section(
-            'xpm_image_seo_optimization_section',
-            __('Image Optimization Settings', 'xpm-image-seo'),
-            array($this, 'optimization_section_callback'),
-            'xpm_image_seo_optimization'
-        );
-        
-        add_settings_section(
-            'xpm_image_seo_compression_section',
-            __('Compression & Quality', 'xpm-image-seo'),
-            array($this, 'compression_section_callback'),
-            'xpm_image_seo_optimization'
-        );
-        
-        add_settings_section(
-            'xpm_image_seo_advanced_section',
-            __('Advanced Optimization', 'xpm-image-seo'),
-            array($this, 'advanced_section_callback'),
-            'xpm_image_seo_optimization'
-        );
-        
-        // PERFORMANCE TAB SECTIONS
-        add_settings_section(
-            'xpm_image_seo_lazy_section',
-            __('Lazy Loading', 'xpm-image-seo'),
-            array($this, 'lazy_section_callback'),
-            'xpm_image_seo_performance'
-        );
-        
-        // ALT TEXT TAB FIELDS
-        add_settings_field('api_key', __('OpenAI API Key', 'xpm-image-seo'), array($this, 'api_key_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_api_section');
-        add_settings_field('global_keywords', __('Global Keywords', 'xpm-image-seo'), array($this, 'global_keywords_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_keywords_section');
-        add_settings_field('use_contextual_keywords', __('Use Contextual Keywords', 'xpm-image-seo'), array($this, 'use_contextual_keywords_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_keywords_section');
-        add_settings_field('keyword_priority', __('Keyword Priority', 'xpm-image-seo'), array($this, 'keyword_priority_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_keywords_section');
-        add_settings_field('max_keywords', __('Max Keywords Per Image', 'xpm-image-seo'), array($this, 'max_keywords_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_keywords_section');
-        add_settings_field('auto_generate', __('Auto-generate for new uploads', 'xpm-image-seo'), array($this, 'auto_generate_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_behavior_section');
-        add_settings_field('prompt', __('Custom Prompt', 'xpm-image-seo'), array($this, 'prompt_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_behavior_section');
-        add_settings_field('update_title', __('Update Image Title', 'xpm-image-seo'), array($this, 'update_title_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_fields_section');
-        add_settings_field('update_description', __('Update Image Description', 'xpm-image-seo'), array($this, 'update_description_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_fields_section');
-        add_settings_field('skip_existing', __('Skip Existing Content', 'xpm-image-seo'), array($this, 'skip_existing_render'), 'xpm_image_seo_alt_text', 'xpm_image_seo_fields_section');
-        
-        // IMAGE OPTIMIZATION TAB FIELDS
-        add_settings_field('auto_optimize', __('Auto-optimize on Upload', 'xpm-image-seo'), array($this, 'auto_optimize_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_optimization_section');
-        add_settings_field('backup_originals', __('Backup Original Images', 'xpm-image-seo'), array($this, 'backup_originals_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_optimization_section');
-        add_settings_field('compression_quality', __('Compression Quality', 'xpm-image-seo'), array($this, 'compression_quality_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_compression_section');
-        add_settings_field('max_width', __('Maximum Width', 'xpm-image-seo'), array($this, 'max_width_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_compression_section');
-        add_settings_field('max_height', __('Maximum Height', 'xpm-image-seo'), array($this, 'max_height_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_compression_section');
-        add_settings_field('convert_to_webp', __('Convert to WebP', 'xpm-image-seo'), array($this, 'convert_to_webp_render'), 'xpm_image_seo_optimization', 'xpm_image_seo_advanced_section');
-        
-        // PERFORMANCE TAB FIELDS
-        add_settings_field('enable_lazy_loading', __('Enable Lazy Loading', 'xpm-image-seo'), array($this, 'enable_lazy_loading_render'), 'xpm_image_seo_performance', 'xpm_image_seo_lazy_section');
-        add_settings_field('lazy_loading_threshold', __('Loading Threshold', 'xpm-image-seo'), array($this, 'lazy_loading_threshold_render'), 'xpm_image_seo_performance', 'xpm_image_seo_lazy_section');
-        add_settings_field('lazy_loading_placeholder', __('Placeholder Image', 'xpm-image-seo'), array($this, 'lazy_loading_placeholder_render'), 'xpm_image_seo_performance', 'xpm_image_seo_lazy_section');
-        add_settings_field('lazy_loading_effect', __('Loading Effect', 'xpm-image-seo'), array($this, 'lazy_loading_effect_render'), 'xpm_image_seo_performance', 'xpm_image_seo_lazy_section');
-    }
-    
-    // Section callbacks
-    public function api_section_callback() {
-        echo '<p>' . __('Configure your OpenAI API settings to enable automatic alt text generation.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function keywords_section_callback() {
-        echo '<p>' . __('Configure smart keyword integration to optimize alt text for SEO. Keywords help make your images more discoverable in search engines.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function behavior_section_callback() {
-        echo '<p>' . __('Control how the AI generates alt text for your images.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function fields_section_callback() {
-        echo '<p>' . __('Choose which image fields to update with the generated content.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function optimization_section_callback() {
-        echo '<p>' . __('Configure automatic image optimization to improve website speed and SEO rankings.', 'xpm-image-seo') . '</p>';
-        
-        $gd_available = extension_loaded('gd');
-        $imagick_available = extension_loaded('imagick');
-        
-        if (!$gd_available && !$imagick_available) {
-            echo '<div class="notice notice-warning inline"><p><strong>' . __('Warning:', 'xpm-image-seo') . '</strong> ' . __('Neither GD nor Imagick extensions are available. Image optimization will be limited.', 'xpm-image-seo') . '</p></div>';
-        } else {
-            $library = $imagick_available ? 'Imagick' : 'GD';
-            echo '<div class="notice notice-success inline"><p><strong>' . sprintf(__('Image library detected: %s', 'xpm-image-seo'), $library) . '</strong></p></div>';
-        }
-    }
-    
-    public function compression_section_callback() {
-        echo '<p>' . __('Configure compression settings and image sizing limits.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function advanced_section_callback() {
-        echo '<p>' . __('Advanced optimization features for better performance.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function lazy_section_callback() {
-        echo '<p>' . __('Lazy loading improves page speed by only loading images when they come into view.', 'xpm-image-seo') . '</p>';
-    }
-    
-    // Field renders - ALT TEXT TAB
-    public function api_key_render() {
-        $options = get_option($this->option_name);
-        $api_key = isset($options['api_key']) ? $options['api_key'] : '';
-        $masked_key = !empty($api_key) ? str_repeat('*', max(0, strlen($api_key) - 8)) . substr($api_key, -8) : '';
-        
-        echo '<input type="password" name="' . $this->option_name . '[api_key]" value="' . esc_attr($api_key) . '" class="regular-text" autocomplete="new-password" />';
-        if (!empty($masked_key)) {
-            echo '<p class="description">' . sprintf(__('Current key: %s', 'xpm-image-seo'), esc_html($masked_key)) . '</p>';
-        }
-        echo '<p class="description">' . sprintf(__('Get your API key from %s. Make sure you have sufficient credits in your OpenAI account.', 'xpm-image-seo'), '<a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>') . '</p>';
-    }
-    
-    public function global_keywords_render() {
-        $options = get_option($this->option_name);
-        $global_keywords = isset($options['global_keywords']) ? $options['global_keywords'] : '';
-        
-        echo '<textarea name="' . $this->option_name . '[global_keywords]" rows="3" class="large-text" placeholder="e.g. your brand name, main services, target keywords">' . esc_textarea($global_keywords) . '</textarea>';
-        echo '<p class="description">' . __('Enter keywords separated by commas. These will be considered for all images. Example: "Xploited Media, digital marketing, web design, SEO services"', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function use_contextual_keywords_render() {
-        $options = get_option($this->option_name);
-        $use_contextual = isset($options['use_contextual_keywords']) ? $options['use_contextual_keywords'] : 1;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[use_contextual_keywords]" value="1" ' . checked(1, $use_contextual, false) . ' /> ';
-        echo __('Extract keywords from pages where images are used', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('When enabled, the plugin will analyze the page title, content, tags, and categories to find relevant keywords for each image.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function keyword_priority_render() {
-        $options = get_option($this->option_name);
-        $priority = isset($options['keyword_priority']) ? $options['keyword_priority'] : 'contextual_first';
-        
-        echo '<select name="' . $this->option_name . '[keyword_priority]">';
-        echo '<option value="contextual_first" ' . selected('contextual_first', $priority, false) . '>' . __('Contextual keywords first', 'xpm-image-seo') . '</option>';
-        echo '<option value="global_first" ' . selected('global_first', $priority, false) . '>' . __('Global keywords first', 'xpm-image-seo') . '</option>';
-        echo '<option value="mixed" ' . selected('mixed', $priority, false) . '>' . __('Mix both intelligently', 'xpm-image-seo') . '</option>';
-        echo '</select>';
-        echo '<p class="description">' . __('Choose how to prioritize keywords when both global and contextual keywords are available.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function max_keywords_render() {
-        $options = get_option($this->option_name);
-        $max_keywords = isset($options['max_keywords']) ? $options['max_keywords'] : 3;
-        
-        echo '<input type="number" name="' . $this->option_name . '[max_keywords]" value="' . esc_attr($max_keywords) . '" min="1" max="10" class="small-text" />';
-        echo '<p class="description">' . __('Maximum number of keywords to incorporate per image (1-10). More keywords = longer alt text.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function auto_generate_render() {
-        $options = get_option($this->option_name);
-        $auto_generate = isset($options['auto_generate']) ? $options['auto_generate'] : 0;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[auto_generate]" value="1" ' . checked(1, $auto_generate, false) . ' /> ';
-        echo __('Automatically generate alt text for new image uploads', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('When enabled, alt text will be automatically generated for images uploaded to your media library.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function prompt_render() {
-        $options = get_option($this->option_name);
-        $prompt = isset($options['prompt']) ? $options['prompt'] : '';
-        
-        echo '<textarea name="' . $this->option_name . '[prompt]" rows="4" class="large-text">' . esc_textarea($prompt) . '</textarea>';
-        echo '<p class="description">' . __('Customize the prompt sent to OpenAI. Leave blank to use the default SEO-optimized prompt.', 'xpm-image-seo') . '</p>';
-        
-        $default_prompt = __("Analyze this image and provide a concise, SEO-friendly alt text description. Focus on the main subject, important visual elements, and context that would be valuable for both screen readers and search engines. Keep it descriptive but under 125 characters.", 'xpm-image-seo');
-        echo '<details><summary>' . __('Show default prompt', 'xpm-image-seo') . '</summary><code>' . esc_html($default_prompt) . '</code></details>';
-    }
-    
-    public function update_title_render() {
-        $options = get_option($this->option_name);
-        $update_title = isset($options['update_title']) ? $options['update_title'] : 1;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[update_title]" value="1" ' . checked(1, $update_title, false) . ' /> ';
-        echo __('Update image title with generated alt text', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('The image title helps with SEO and appears in media library listings.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function update_description_render() {
-        $options = get_option($this->option_name);
-        $update_description = isset($options['update_description']) ? $options['update_description'] : 1;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[update_description]" value="1" ' . checked(1, $update_description, false) . ' /> ';
-        echo __('Update image description with generated alt text', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('The description provides additional context and SEO value for the image.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function skip_existing_render() {
-        $options = get_option($this->option_name);
-        $skip_existing = isset($options['skip_existing']) ? $options['skip_existing'] : 1;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[skip_existing]" value="1" ' . checked(1, $skip_existing, false) . ' /> ';
-        echo __('Skip fields that already have content', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('When enabled, only empty fields will be updated. Disable to overwrite existing content.', 'xpm-image-seo') . '</p>';
-    }
-    
-    // Field renders - IMAGE OPTIMIZATION TAB
-    public function auto_optimize_render() {
-        $options = get_option($this->option_name);
-        $auto_optimize = isset($options['auto_optimize']) ? $options['auto_optimize'] : 1; // Default to enabled
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[auto_optimize]" value="1" ' . checked(1, $auto_optimize, false) . ' /> ';
-        echo __('Automatically optimize images when uploaded', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('When enabled, all new image uploads will be automatically optimized according to your settings below.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function backup_originals_render() {
-        $options = get_option($this->option_name);
-        $backup = isset($options['backup_originals']) ? $options['backup_originals'] : 1;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[backup_originals]" value="1" ' . checked(1, $backup, false) . ' /> ';
-        echo __('Keep backup copies of original images', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('Recommended: Creates backup copies in uploads/xpm-backups/ folder. Allows restoration if needed.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function compression_quality_render() {
-        $options = get_option($this->option_name);
-        $quality = isset($options['compression_quality']) ? $options['compression_quality'] : 85;
-        
-        echo '<input type="range" name="' . $this->option_name . '[compression_quality]" value="' . esc_attr($quality) . '" min="60" max="100" step="5" class="compression-slider" />';
-        echo '<span class="quality-display">' . $quality . '%</span>';
-        echo '<p class="description">' . __('Compression quality: 60% = Maximum compression, 100% = Best quality. Recommended: 85%', 'xpm-image-seo') . '</p>';
-        
-        echo '<script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const slider = document.querySelector(".compression-slider");
-            if (slider) {
-                slider.addEventListener("input", function() {
-                    const display = document.querySelector(".quality-display");
-                    if (display) display.textContent = this.value + "%";
-                });
-            }
-        });
-        </script>';
-    }
-    
-    public function max_width_render() {
-        $options = get_option($this->option_name);
-        $max_width = isset($options['max_width']) ? $options['max_width'] : 2048;
-        
-        echo '<input type="number" name="' . $this->option_name . '[max_width]" value="' . esc_attr($max_width) . '" min="500" max="4000" step="100" class="small-text" /> px';
-        echo '<p class="description">' . __('Images wider than this will be resized. Common values: 1920px (Full HD), 2048px (2K), 2560px (1440p)', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function max_height_render() {
-        $options = get_option($this->option_name);
-        $max_height = isset($options['max_height']) ? $options['max_height'] : 2048;
-        
-        echo '<input type="number" name="' . $this->option_name . '[max_height]" value="' . esc_attr($max_height) . '" min="0" max="4000" step="100" class="small-text" /> px';
-        echo '<p class="description">' . __('Images taller than this will be resized. Set to 0 to disable height restrictions.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function convert_to_webp_render() {
-        $options = get_option($this->option_name);
-        $convert_webp = isset($options['convert_to_webp']) ? $options['convert_to_webp'] : 0;
-        
-        $webp_supported = function_exists('imagewebp') || (extension_loaded('imagick') && class_exists('Imagick'));
-        
-        if (!$webp_supported) {
-            echo '<input type="checkbox" disabled /> ' . __('Convert images to WebP format', 'xpm-image-seo') . ' <em>(' . __('Not supported on this server', 'xpm-image-seo') . ')</em>';
-            echo '<p class="description">' . __('WebP format provides superior compression. Your server does not support WebP conversion.', 'xpm-image-seo') . '</p>';
-        } else {
-            echo '<label><input type="checkbox" name="' . $this->option_name . '[convert_to_webp]" value="1" ' . checked(1, $convert_webp, false) . ' /> ';
-            echo __('Convert images to WebP format for better compression', 'xpm-image-seo') . '</label>';
-            echo '<p class="description">' . __('WebP provides 25-35% better compression than JPEG. Creates both original and WebP versions.', 'xpm-image-seo') . '</p>';
-        }
-    }
-    
-    // Field renders - PERFORMANCE TAB
-    public function enable_lazy_loading_render() {
-        $options = get_option($this->option_name);
-        $enable_lazy = isset($options['enable_lazy_loading']) ? $options['enable_lazy_loading'] : 0;
-        
-        echo '<label><input type="checkbox" name="' . $this->option_name . '[enable_lazy_loading]" value="1" ' . checked(1, $enable_lazy, false) . ' /> ';
-        echo __('Enable lazy loading for images', 'xpm-image-seo') . '</label>';
-        echo '<p class="description">' . __('Images will only load when they come into the viewport, improving page load speed.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function lazy_loading_threshold_render() {
-        $options = get_option($this->option_name);
-        $threshold = isset($options['lazy_loading_threshold']) ? $options['lazy_loading_threshold'] : 200;
-        
-        echo '<input type="number" name="' . $this->option_name . '[lazy_loading_threshold]" value="' . esc_attr($threshold) . '" min="0" max="1000" step="50" class="small-text" /> px';
-        echo '<p class="description">' . __('Distance from viewport when images should start loading. 0 = exactly when visible, 200 = 200px before visible.', 'xpm-image-seo') . '</p>';
-    }
-    
-    public function lazy_loading_placeholder_render() {
-        $options = get_option($this->option_name);
-        $placeholder = isset($options['lazy_loading_placeholder']) ? $options['lazy_loading_placeholder'] : 'blur';
-        
-        echo '<select name="' . $this->option_name . '[lazy_loading_placeholder]">';
-        echo '<option value="blur" ' . selected('blur', $placeholder, false) . '>' . __('Blurred placeholder', 'xpm-image-seo') . '</option>';
-        echo '<option value="grey" ' . selected('grey', $placeholder, false) . '>' . __('Grey placeholder', 'xpm-image-seo') . '</option>';
-        echo '<option value="transparent" ' . selected('transparent', $placeholder, false) . '>' . __('Transparent', 'xpm-image-seo') . '</option>';
-        echo '<option value="custom" ' . selected('custom', $placeholder, false) . '>' . __('Custom placeholder URL', 'xpm-image-seo') . '</option>';
-        echo '</select>';
-        echo '<p class="description">' . __('What to show while images are loading.', 'xpm-image-seo') . '</p>';
-        
-        $custom_placeholder = isset($options['lazy_loading_custom_placeholder']) ? $options['lazy_loading_custom_placeholder'] : '';
-        echo '<div id="custom-placeholder-field" style="margin-top: 10px; ' . ($placeholder !== 'custom' ? 'display: none;' : '') . '">';
-        echo '<input type="url" name="' . $this->option_name . '[lazy_loading_custom_placeholder]" value="' . esc_attr($custom_placeholder) . '" class="regular-text" placeholder="https://example.com/placeholder.jpg" />';
-        echo '<p class="description">' . __('URL to custom placeholder image.', 'xpm-image-seo') . '</p>';
-        echo '</div>';
-        
-        echo '<script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const select = document.querySelector("select[name=\'' . $this->option_name . '[lazy_loading_placeholder]\']");
-            const customField = document.getElementById("custom-placeholder-field");
-            if (select && customField) {
-                select.addEventListener("change", function() {
-                    customField.style.display = this.value === "custom" ? "block" : "none";
-                });
-            }
-        });
-        </script>';
-    }
-    
-    public function lazy_loading_effect_render() {
-        $options = get_option($this->option_name);
-        $effect = isset($options['lazy_loading_effect']) ? $options['lazy_loading_effect'] : 'fade';
-        
-        echo '<select name="' . $this->option_name . '[lazy_loading_effect]">';
-        echo '<option value="fade" ' . selected('fade', $effect, false) . '>' . __('Fade in', 'xpm-image-seo') . '</option>';
-        echo '<option value="slide" ' . selected('slide', $effect, false) . '>' . __('Slide in', 'xpm-image-seo') . '</option>';
-        echo '<option value="zoom" ' . selected('zoom', $effect, false) . '>' . __('Zoom in', 'xpm-image-seo') . '</option>';
-        echo '<option value="none" ' . selected('none', $effect, false) . '>' . __('No effect', 'xpm-image-seo') . '</option>';
-        echo '</select>';
-        echo '<p class="description">' . __('Animation effect when images load.', 'xpm-image-seo') . '</p>';
     }
     
     /**
@@ -529,43 +222,38 @@ class XPM_Image_SEO_Admin {
     public function sanitize_settings($input) {
         $sanitized = array();
         
+        // Get existing options to preserve values from other tabs
+        $existing_options = get_option($this->option_name, array());
+        $sanitized = $existing_options;
+        
         // Alt Text settings
         if (isset($input['api_key'])) {
             $sanitized['api_key'] = sanitize_text_field($input['api_key']);
         }
-        
         if (isset($input['global_keywords'])) {
             $sanitized['global_keywords'] = sanitize_textarea_field($input['global_keywords']);
         }
-        
         if (isset($input['use_contextual_keywords'])) {
             $sanitized['use_contextual_keywords'] = intval($input['use_contextual_keywords']);
         }
-        
         if (isset($input['keyword_priority'])) {
             $sanitized['keyword_priority'] = sanitize_text_field($input['keyword_priority']);
         }
-        
         if (isset($input['max_keywords'])) {
             $sanitized['max_keywords'] = intval($input['max_keywords']);
         }
-        
         if (isset($input['auto_generate'])) {
             $sanitized['auto_generate'] = intval($input['auto_generate']);
         }
-        
         if (isset($input['prompt'])) {
             $sanitized['prompt'] = sanitize_textarea_field($input['prompt']);
         }
-        
         if (isset($input['update_title'])) {
             $sanitized['update_title'] = intval($input['update_title']);
         }
-        
         if (isset($input['update_description'])) {
             $sanitized['update_description'] = intval($input['update_description']);
         }
-        
         if (isset($input['skip_existing'])) {
             $sanitized['skip_existing'] = intval($input['skip_existing']);
         }
@@ -574,23 +262,18 @@ class XPM_Image_SEO_Admin {
         if (isset($input['auto_optimize'])) {
             $sanitized['auto_optimize'] = intval($input['auto_optimize']);
         }
-        
         if (isset($input['compression_quality'])) {
             $sanitized['compression_quality'] = max(60, min(100, intval($input['compression_quality'])));
         }
-        
         if (isset($input['max_width'])) {
             $sanitized['max_width'] = max(500, min(4000, intval($input['max_width'])));
         }
-        
         if (isset($input['max_height'])) {
             $sanitized['max_height'] = max(0, min(4000, intval($input['max_height'])));
         }
-        
         if (isset($input['backup_originals'])) {
             $sanitized['backup_originals'] = intval($input['backup_originals']);
         }
-        
         if (isset($input['convert_to_webp'])) {
             $sanitized['convert_to_webp'] = intval($input['convert_to_webp']);
         }
@@ -599,19 +282,15 @@ class XPM_Image_SEO_Admin {
         if (isset($input['enable_lazy_loading'])) {
             $sanitized['enable_lazy_loading'] = intval($input['enable_lazy_loading']);
         }
-        
         if (isset($input['lazy_loading_threshold'])) {
             $sanitized['lazy_loading_threshold'] = max(0, min(1000, intval($input['lazy_loading_threshold'])));
         }
-        
         if (isset($input['lazy_loading_placeholder'])) {
             $sanitized['lazy_loading_placeholder'] = sanitize_text_field($input['lazy_loading_placeholder']);
         }
-        
         if (isset($input['lazy_loading_custom_placeholder'])) {
             $sanitized['lazy_loading_custom_placeholder'] = esc_url_raw($input['lazy_loading_custom_placeholder']);
         }
-        
         if (isset($input['lazy_loading_effect'])) {
             $sanitized['lazy_loading_effect'] = sanitize_text_field($input['lazy_loading_effect']);
         }
@@ -620,78 +299,330 @@ class XPM_Image_SEO_Admin {
     }
     
     /**
-     * Settings page with tabs
+     * Settings page with ALL settings organized into tabs
      */
     public function settings_page() {
         $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'alt_text';
+        $options = get_option($this->option_name, array());
         ?>
         <div class="wrap">
             <h1>
-                <?php _e('XPM Image SEO Settings', 'xpm-image-seo'); ?>
-                <span class="xpm-brand">by <a href="https://xploited.media" target="_blank">Xploited Media</a></span>
+                XPM Image SEO Settings
+                <span style="font-size: 14px; font-weight: normal; color: #666;">by <a href="https://xploited.media" target="_blank" style="color: #0073aa; text-decoration: none;">Xploited Media</a></span>
             </h1>
             
-            <div class="xpm-tabs">
-                <ul>
-                    <li><a href="?page=xpm-image-seo-settings&tab=alt_text" class="<?php echo $active_tab === 'alt_text' ? 'active' : ''; ?>"><?php _e('AI Alt Text', 'xpm-image-seo'); ?></a></li>
-                    <li><a href="?page=xpm-image-seo-settings&tab=optimization" class="<?php echo $active_tab === 'optimization' ? 'active' : ''; ?>"><?php _e('Image Optimization', 'xpm-image-seo'); ?></a></li>
-                    <li><a href="?page=xpm-image-seo-settings&tab=performance" class="<?php echo $active_tab === 'performance' ? 'active' : ''; ?>"><?php _e('Performance', 'xpm-image-seo'); ?></a></li>
-                </ul>
+            <div class="nav-tab-wrapper">
+                <a href="#" class="nav-tab <?php echo $active_tab === 'alt_text' ? 'nav-tab-active' : ''; ?>" data-tab="alt_text">AI Alt Text</a>
+                <a href="#" class="nav-tab <?php echo $active_tab === 'optimization' ? 'nav-tab-active' : ''; ?>" data-tab="optimization">Image Optimization</a>
+                <a href="#" class="nav-tab <?php echo $active_tab === 'performance' ? 'nav-tab-active' : ''; ?>" data-tab="performance">Performance</a>
             </div>
             
-            <div class="xpm-settings-container">
-                <div class="xpm-settings-main">
-                    <form action="options.php" method="post">
-                        <?php settings_fields('xpm_image_seo'); ?>
-                        
-                        <div id="alt_text_tab" class="xmp-tab-content <?php echo $active_tab === 'alt_text' ? 'active' : ''; ?>">
-                            <?php do_settings_sections('xpm_image_seo_alt_text'); ?>
-                        </div>
-                        
-                        <div id="optimization_tab" class="xpm-tab-content <?php echo $active_tab === 'optimization' ? 'active' : ''; ?>">
-                            <?php do_settings_sections('xpm_image_seo_optimization'); ?>
-                        </div>
-                        
-                        <div id="performance_tab" class="xpm-tab-content <?php echo $active_tab === 'performance' ? 'active' : ''; ?>">
-                            <?php do_settings_sections('xpm_image_seo_performance'); ?>
-                        </div>
-                        
-                        <?php submit_button(__('Save Settings', 'xpm-image-seo')); ?>
-                    </form>
+            <form action="options.php" method="post">
+                <?php settings_fields('xpm_image_seo'); ?>
+                
+                <!-- ALT TEXT TAB -->
+                <div id="alt_text_content" class="tab-content <?php echo $active_tab === 'alt_text' ? 'active' : ''; ?>">
+                    
+                    <h2>OpenAI API Configuration</h2>
+                    <p>Configure your OpenAI API settings to enable automatic alt text generation.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">OpenAI API Key</th>
+                            <td>
+                                <?php 
+                                $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+                                $masked_key = !empty($api_key) ? str_repeat('*', max(0, strlen($api_key) - 8)) . substr($api_key, -8) : '';
+                                ?>
+                                <input type="password" name="<?php echo $this->option_name; ?>[api_key]" value="<?php echo esc_attr($api_key); ?>" class="regular-text" autocomplete="new-password" />
+                                <?php if (!empty($masked_key)): ?>
+                                    <p class="description">Current key: <?php echo esc_html($masked_key); ?></p>
+                                <?php endif; ?>
+                                <p class="description">Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>. Make sure you have sufficient credits in your OpenAI account.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h2>Smart Keywords</h2>
+                    <p>Configure smart keyword integration to optimize alt text for SEO.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Global Keywords</th>
+                            <td>
+                                <textarea name="<?php echo $this->option_name; ?>[global_keywords]" rows="3" class="large-text" placeholder="e.g. your brand name, main services, target keywords"><?php echo esc_textarea(isset($options['global_keywords']) ? $options['global_keywords'] : ''); ?></textarea>
+                                <p class="description">Enter keywords separated by commas. These will be considered for all images. Example: "Xploited Media, digital marketing, web design, SEO services"</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Use Contextual Keywords</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[use_contextual_keywords]" value="1" <?php checked(1, isset($options['use_contextual_keywords']) ? $options['use_contextual_keywords'] : 1); ?> />
+                                    Extract keywords from pages where images are used
+                                </label>
+                                <p class="description">When enabled, the plugin will analyze the page title, content, tags, and categories to find relevant keywords for each image.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Keyword Priority</th>
+                            <td>
+                                <select name="<?php echo $this->option_name; ?>[keyword_priority]">
+                                    <option value="contextual_first" <?php selected('contextual_first', isset($options['keyword_priority']) ? $options['keyword_priority'] : 'contextual_first'); ?>>Contextual keywords first</option>
+                                    <option value="global_first" <?php selected('global_first', isset($options['keyword_priority']) ? $options['keyword_priority'] : 'contextual_first'); ?>>Global keywords first</option>
+                                    <option value="mixed" <?php selected('mixed', isset($options['keyword_priority']) ? $options['keyword_priority'] : 'contextual_first'); ?>>Mix both intelligently</option>
+                                </select>
+                                <p class="description">Choose how to prioritize keywords when both global and contextual keywords are available.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Max Keywords Per Image</th>
+                            <td>
+                                <input type="number" name="<?php echo $this->option_name; ?>[max_keywords]" value="<?php echo esc_attr(isset($options['max_keywords']) ? $options['max_keywords'] : 3); ?>" min="1" max="10" class="small-text" />
+                                <p class="description">Maximum number of keywords to incorporate per image (1-10). More keywords = longer alt text.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h2>AI Behavior Settings</h2>
+                    <p>Control how the AI generates alt text for your images.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Auto-generate for new uploads</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[auto_generate]" value="1" <?php checked(1, isset($options['auto_generate']) ? $options['auto_generate'] : 0); ?> />
+                                    Automatically generate alt text for new image uploads
+                                </label>
+                                <p class="description">When enabled, alt text will be automatically generated for images uploaded to your media library.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Custom Prompt</th>
+                            <td>
+                                <textarea name="<?php echo $this->option_name; ?>[prompt]" rows="4" class="large-text"><?php echo esc_textarea(isset($options['prompt']) ? $options['prompt'] : ''); ?></textarea>
+                                <p class="description">Customize the prompt sent to OpenAI. Leave blank to use the default SEO-optimized prompt.</p>
+                                <details>
+                                    <summary>Show default prompt</summary>
+                                    <code>Analyze this image and provide a concise, SEO-friendly alt text description. Focus on the main subject, important visual elements, and context that would be valuable for both screen readers and search engines. Keep it descriptive but under 125 characters.</code>
+                                </details>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h2>Fields to Update</h2>
+                    <p>Choose which image fields to update with the generated content.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Update Image Title</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[update_title]" value="1" <?php checked(1, isset($options['update_title']) ? $options['update_title'] : 1); ?> />
+                                    Update image title with generated alt text
+                                </label>
+                                <p class="description">The image title helps with SEO and appears in media library listings.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Update Image Description</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[update_description]" value="1" <?php checked(1, isset($options['update_description']) ? $options['update_description'] : 1); ?> />
+                                    Update image description with generated alt text
+                                </label>
+                                <p class="description">The description provides additional context and SEO value for the image.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Skip Existing Content</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[skip_existing]" value="1" <?php checked(1, isset($options['skip_existing']) ? $options['skip_existing'] : 1); ?> />
+                                    Skip fields that already have content
+                                </label>
+                                <p class="description">When enabled, only empty fields will be updated. Disable to overwrite existing content.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <?php submit_button('Save Alt Text Settings'); ?>
                 </div>
                 
-                <div class="xpm-settings-sidebar">
-                    <div class="xpm-info-box">
-                        <h3><?php _e('Quick Start Guide', 'xpm-image-seo'); ?></h3>
-                        <ol>
-                            <li><?php _e('Get your OpenAI API key', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Configure optimization settings', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Enable lazy loading for performance', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Save settings', 'xpm-image-seo'); ?></li>
-                            <li><?php printf(__('Go to %s to update existing images', 'xpm-image-seo'), '<a href="' . admin_url('upload.php?page=xpm-image-seo-bulk-update') . '">Bulk Update</a>'); ?></li>
-                            <li><?php printf(__('Go to %s to optimize images', 'xpm-image-seo'), '<a href="' . admin_url('upload.php?page=xpm-image-seo-optimizer') . '">Image Optimizer</a>'); ?></li>
-                        </ol>
-                    </div>
+                <!-- IMAGE OPTIMIZATION TAB -->
+                <div id="optimization_content" class="tab-content <?php echo $active_tab === 'optimization' ? 'active' : ''; ?>">
                     
-                    <div class="xpm-info-box">
-                        <h3><?php _e('About XPM Image SEO', 'xpm-image-seo'); ?></h3>
-                        <p><?php _e('Complete image SEO and optimization solution. Boost your website\'s SEO and performance with AI-powered alt text, smart image compression, and lazy loading.', 'xpm-image-seo'); ?></p>
-                        <p><strong><?php _e('Version:', 'xpm-image-seo'); ?></strong> <?php echo XPM_IMAGE_SEO_VERSION; ?></p>
-                        <p><a href="https://xploited.media" target="_blank" class="button"><?php _e('Visit Xploited Media', 'xpm-image-seo'); ?></a></p>
-                    </div>
+                    <h2>Image Optimization Settings</h2>
+                    <p>Configure automatic image optimization to improve website speed and SEO rankings.</p>
                     
-                    <?php if ($active_tab === 'performance'): ?>
-                    <div class="xpm-info-box">
-                        <h3><?php _e('Lazy Loading Benefits', 'xpm-image-seo'); ?></h3>
-                        <ul>
-                            <li><?php _e('Faster page load times', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Reduced bandwidth usage', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Better Core Web Vitals scores', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Improved SEO rankings', 'xpm-image-seo'); ?></li>
-                            <li><?php _e('Better user experience', 'xpm-image-seo'); ?></li>
-                        </ul>
-                    </div>
-                    <?php endif; ?>
+                    <?php
+                    $gd_available = extension_loaded('gd');
+                    $imagick_available = extension_loaded('imagick');
+                    
+                    if (!$gd_available && !$imagick_available) {
+                        echo '<div class="notice notice-warning inline"><p><strong>Warning:</strong> Neither GD nor Imagick extensions are available. Image optimization will be limited.</p></div>';
+                    } else {
+                        $library = $imagick_available ? 'Imagick' : 'GD';
+                        echo '<div class="notice notice-success inline"><p><strong>Image library detected: ' . $library . '</strong></p></div>';
+                    }
+                    ?>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Auto-optimize on Upload</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[auto_optimize]" value="1" <?php checked(1, isset($options['auto_optimize']) ? $options['auto_optimize'] : 1); ?> />
+                                    Automatically optimize images when uploaded
+                                </label>
+                                <p class="description">When enabled, all new image uploads will be automatically optimized according to your settings below.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Backup Original Images</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[backup_originals]" value="1" <?php checked(1, isset($options['backup_originals']) ? $options['backup_originals'] : 1); ?> />
+                                    Keep backup copies of original images
+                                </label>
+                                <p class="description">Recommended: Creates backup copies in uploads/xpm-backups/ folder. Allows restoration if needed.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h2>Compression &amp; Quality</h2>
+                    <p>Configure compression settings and image sizing limits.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Compression Quality</th>
+                            <td>
+                                <?php $quality = isset($options['compression_quality']) ? $options['compression_quality'] : 85; ?>
+                                <input type="range" name="<?php echo $this->option_name; ?>[compression_quality]" value="<?php echo esc_attr($quality); ?>" min="60" max="100" step="5" class="compression-slider" />
+                                <span class="quality-display"><?php echo $quality; ?>%</span>
+                                <p class="description">Compression quality: 60% = Maximum compression, 100% = Best quality. Recommended: 85%</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Maximum Width</th>
+                            <td>
+                                <input type="number" name="<?php echo $this->option_name; ?>[max_width]" value="<?php echo esc_attr(isset($options['max_width']) ? $options['max_width'] : 2048); ?>" min="500" max="4000" step="100" class="small-text" /> px
+                                <p class="description">Images wider than this will be resized. Common values: 1920px (Full HD), 2048px (2K), 2560px (1440p)</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Maximum Height</th>
+                            <td>
+                                <input type="number" name="<?php echo $this->option_name; ?>[max_height]" value="<?php echo esc_attr(isset($options['max_height']) ? $options['max_height'] : 2048); ?>" min="0" max="4000" step="100" class="small-text" /> px
+                                <p class="description">Images taller than this will be resized. Set to 0 to disable height restrictions.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h2>Advanced Optimization</h2>
+                    <p>Advanced optimization features for better performance.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Convert to WebP</th>
+                            <td>
+                                <?php 
+                                $webp_supported = function_exists('imagewebp') || (extension_loaded('imagick') && class_exists('Imagick'));
+                                $convert_webp = isset($options['convert_to_webp']) ? $options['convert_to_webp'] : 0;
+                                
+                                if (!$webp_supported): ?>
+                                    <input type="checkbox" disabled /> Convert images to WebP format <em>(Not supported on this server)</em>
+                                    <p class="description">WebP format provides superior compression. Your server does not support WebP conversion.</p>
+                                <?php else: ?>
+                                    <label>
+                                        <input type="checkbox" name="<?php echo $this->option_name; ?>[convert_to_webp]" value="1" <?php checked(1, $convert_webp); ?> />
+                                        Convert images to WebP format for better compression
+                                    </label>
+                                    <p class="description">WebP provides 25-35% better compression than JPEG. Creates both original and WebP versions.</p>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <?php submit_button('Save Optimization Settings'); ?>
+                </div>
+                
+                <!-- PERFORMANCE TAB -->
+                <div id="performance_content" class="tab-content <?php echo $active_tab === 'performance' ? 'active' : ''; ?>">
+                    
+                    <h2>Lazy Loading</h2>
+                    <p>Lazy loading improves page speed by only loading images when they come into view.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Enable Lazy Loading</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[enable_lazy_loading]" value="1" <?php checked(1, isset($options['enable_lazy_loading']) ? $options['enable_lazy_loading'] : 0); ?> />
+                                    Enable lazy loading for images
+                                </label>
+                                <p class="description">Images will only load when they come into the viewport, improving page load speed.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Loading Threshold</th>
+                            <td>
+                                <input type="number" name="<?php echo $this->option_name; ?>[lazy_loading_threshold]" value="<?php echo esc_attr(isset($options['lazy_loading_threshold']) ? $options['lazy_loading_threshold'] : 200); ?>" min="0" max="1000" step="50" class="small-text" /> px
+                                <p class="description">Distance from viewport when images should start loading. 0 = exactly when visible, 200 = 200px before visible.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Placeholder Image</th>
+                            <td>
+                                <?php $placeholder = isset($options['lazy_loading_placeholder']) ? $options['lazy_loading_placeholder'] : 'blur'; ?>
+                                <select name="<?php echo $this->option_name; ?>[lazy_loading_placeholder]">
+                                    <option value="blur" <?php selected('blur', $placeholder); ?>>Blurred placeholder</option>
+                                    <option value="grey" <?php selected('grey', $placeholder); ?>>Grey placeholder</option>
+                                    <option value="transparent" <?php selected('transparent', $placeholder); ?>>Transparent</option>
+                                    <option value="custom" <?php selected('custom', $placeholder); ?>>Custom placeholder URL</option>
+                                </select>
+                                <p class="description">What to show while images are loading.</p>
+                                
+                                <?php $custom_placeholder = isset($options['lazy_loading_custom_placeholder']) ? $options['lazy_loading_custom_placeholder'] : ''; ?>
+                                <div id="custom-placeholder-field" style="margin-top: 10px; <?php echo ($placeholder !== 'custom' ? 'display: none;' : ''); ?>">
+                                    <input type="url" name="<?php echo $this->option_name; ?>[lazy_loading_custom_placeholder]" value="<?php echo esc_attr($custom_placeholder); ?>" class="regular-text" placeholder="https://example.com/placeholder.jpg" />
+                                    <p class="description">URL to custom placeholder image.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Loading Effect</th>
+                            <td>
+                                <?php $effect = isset($options['lazy_loading_effect']) ? $options['lazy_loading_effect'] : 'fade'; ?>
+                                <select name="<?php echo $this->option_name; ?>[lazy_loading_effect]">
+                                    <option value="fade" <?php selected('fade', $effect); ?>>Fade in</option>
+                                    <option value="slide" <?php selected('slide', $effect); ?>>Slide in</option>
+                                    <option value="zoom" <?php selected('zoom', $effect); ?>>Zoom in</option>
+                                    <option value="none" <?php selected('none', $effect); ?>>No effect</option>
+                                </select>
+                                <p class="description">Animation effect when images load.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <?php submit_button('Save Performance Settings'); ?>
+                </div>
+                
+            </form>
+            
+            <!-- Sidebar -->
+            <div style="margin-top: 40px;">
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 1px rgba(0,0,0,0.04);">
+                    <h3 style="margin-top: 0; color: #23282d; border-bottom: 1px solid #eee; padding-bottom: 10px;">Quick Start Guide</h3>
+                    <ol style="padding-left: 20px;">
+                        <li style="margin-bottom: 8px;">Get your OpenAI API key</li>
+                        <li style="margin-bottom: 8px;">Configure optimization settings</li>
+                        <li style="margin-bottom: 8px;">Enable lazy loading for performance</li>
+                        <li style="margin-bottom: 8px;">Save settings</li>
+                        <li style="margin-bottom: 8px;"><a href="<?php echo admin_url('upload.php?page=xpm-image-seo-bulk-update'); ?>">Go to Bulk Update</a> to update existing images</li>
+                        <li style="margin-bottom: 8px;"><a href="<?php echo admin_url('upload.php?page=xpm-image-seo-optimizer'); ?>">Go to Image Optimizer</a> to optimize images</li>
+                    </ol>
+                </div>
+                
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 1px rgba(0,0,0,0.04);">
+                    <h3 style="margin-top: 0; color: #23282d; border-bottom: 1px solid #eee; padding-bottom: 10px;">About XPM Image SEO</h3>
+                    <p>Complete image SEO and optimization solution. Boost your website's SEO and performance with AI-powered alt text, smart image compression, and lazy loading.</p>
+                    <p><strong>Version:</strong> <?php echo defined('XPM_IMAGE_SEO_VERSION') ? XPM_IMAGE_SEO_VERSION : '1.1.0'; ?></p>
+                    <p><a href="https://xploited.media" target="_blank" class="button">Visit Xploited Media</a></p>
                 </div>
             </div>
         </div>
@@ -705,41 +636,41 @@ class XPM_Image_SEO_Admin {
         ?>
         <div class="wrap">
             <h1>
-                <?php _e('XPM Bulk Alt Text Update', 'xpm-image-seo'); ?>
-                <span class="xpm-brand">by <a href="https://xploited.media" target="_blank">Xploited Media</a></span>
+                XPM Bulk Alt Text Update
+                <span style="font-size: 14px; color: #666;">by <a href="https://xploited.media" target="_blank">Xploited Media</a></span>
             </h1>
             
             <div id="xpm-bulk-update-container">
                 <div class="xpm-bulk-controls">
                     <button id="xpm-scan-images" class="button button-primary button-large">
                         <span class="dashicons dashicons-search"></span>
-                        <?php _e('Scan for Images Without Alt Text', 'xpm-image-seo'); ?>
+                        Scan for Images Without Alt Text
                     </button>
                     <button id="xpm-bulk-update-start" class="button button-secondary button-large" disabled>
                         <span class="dashicons dashicons-update"></span>
-                        <?php _e('Start Bulk Update', 'xpm-image-seo'); ?>
+                        Start Bulk Update
                     </button>
                     <button id="xpm-bulk-update-stop" class="button button-large" style="display: none;">
                         <span class="dashicons dashicons-no"></span>
-                        <?php _e('Stop Update', 'xpm-image-seo'); ?>
+                        Stop Update
                     </button>
                 </div>
                 
                 <div id="xpm-scan-results" style="display: none;">
                     <div class="xpm-results-header">
-                        <h3><?php _e('Images without Alt Text:', 'xpm-image-seo'); ?> <span id="xpm-images-count" class="count">0</span></h3>
-                        <p class="description"><?php _e('These images will benefit from SEO-optimized alt text.', 'xpm-image-seo'); ?></p>
+                        <h3>Images without Alt Text: <span id="xpm-images-count" class="count">0</span></h3>
+                        <p class="description">These images will benefit from SEO-optimized alt text.</p>
                     </div>
                     <div id="xpm-images-preview"></div>
                 </div>
                 
                 <div id="xpm-progress-container" style="display: none;">
-                    <h3><?php _e('Update Progress', 'xpm-image-seo'); ?></h3>
+                    <h3>Update Progress</h3>
                     <div class="xpm-progress-bar">
                         <div id="xpm-progress-fill"></div>
                     </div>
                     <div class="xpm-progress-info">
-                        <span id="xpm-progress-text"><?php _e('0 of 0 images processed', 'xpm-image-seo'); ?></span>
+                        <span id="xpm-progress-text">0 of 0 images processed</span>
                         <span id="xpm-estimated-time"></span>
                     </div>
                 </div>
@@ -757,64 +688,64 @@ class XPM_Image_SEO_Admin {
         ?>
         <div class="wrap">
             <h1>
-                <?php _e('XPM Image Optimizer', 'xpm-image-seo'); ?>
-                <span class="xpm-brand">by <a href="https://xploited.media" target="_blank">Xploited Media</a></span>
+                XPM Image Optimizer
+                <span style="font-size: 14px; color: #666;">by <a href="https://xploited.media" target="_blank">Xploited Media</a></span>
             </h1>
             
             <div id="xpm-optimizer-container">
                 <div class="xpm-optimizer-controls">
                     <button id="xpm-scan-unoptimized" class="button button-primary button-large">
                         <span class="dashicons dashicons-images-alt2"></span>
-                        <?php _e('Scan for Unoptimized Images', 'xpm-image-seo'); ?>
+                        Scan for Unoptimized Images
                     </button>
                     <button id="xpm-optimize-start" class="button button-secondary button-large" disabled>
                         <span class="dashicons dashicons-performance"></span>
-                        <?php _e('Start Bulk Optimization', 'xpm-image-seo'); ?>
+                        Start Bulk Optimization
                     </button>
                     <button id="xpm-optimize-stop" class="button button-large" style="display: none;">
                         <span class="dashicons dashicons-no"></span>
-                        <?php _e('Stop Optimization', 'xpm-image-seo'); ?>
+                        Stop Optimization
                     </button>
                     <button id="xpm-restore-images" class="button button-link">
                         <span class="dashicons dashicons-backup"></span>
-                        <?php _e('Restore from Backups', 'xpm-image-seo'); ?>
+                        Restore from Backups
                     </button>
                 </div>
                 
                 <div id="xpm-optimizer-stats" class="xpm-stats-grid" style="display: none;">
                     <div class="stat-card">
-                        <h3><?php _e('Images Found', 'xpm-image-seo'); ?></h3>
+                        <h3>Images Found</h3>
                         <span class="stat-number" id="total-images">0</span>
                     </div>
                     <div class="stat-card">
-                        <h3><?php _e('Total Size', 'xpm-image-seo'); ?></h3>
+                        <h3>Total Size</h3>
                         <span class="stat-number" id="total-size">0 MB</span>
                     </div>
                     <div class="stat-card">
-                        <h3><?php _e('Potential Savings', 'xpm-image-seo'); ?></h3>
+                        <h3>Potential Savings</h3>
                         <span class="stat-number" id="potential-savings">~0%</span>
                     </div>
                     <div class="stat-card">
-                        <h3><?php _e('Processing', 'xpm-image-seo'); ?></h3>
+                        <h3>Processing</h3>
                         <span class="stat-number" id="processing-count">0</span>
                     </div>
                 </div>
                 
                 <div id="xpm-optimizer-results" style="display: none;">
                     <div class="xpm-results-header">
-                        <h3><?php _e('Images to Optimize:', 'xpm-image-seo'); ?> <span id="xpm-optimizer-count" class="count">0</span></h3>
-                        <p class="description"><?php _e('These images can be optimized to improve website performance and loading speeds.', 'xpm-image-seo'); ?></p>
+                        <h3>Images to Optimize: <span id="xpm-optimizer-count" class="count">0</span></h3>
+                        <p class="description">These images can be optimized to improve website performance and loading speeds.</p>
                     </div>
                     <div id="xpm-optimizer-preview"></div>
                 </div>
                 
                 <div id="xpm-optimizer-progress" style="display: none;">
-                    <h3><?php _e('Optimization Progress', 'xpm-image-seo'); ?></h3>
+                    <h3>Optimization Progress</h3>
                     <div class="xpm-progress-bar">
                         <div id="xpm-optimizer-progress-fill"></div>
                     </div>
                     <div class="xpm-progress-info">
-                        <span id="xpm-optimizer-progress-text"><?php _e('0 of 0 images optimized', 'xpm-image-seo'); ?></span>
+                        <span id="xpm-optimizer-progress-text">0 of 0 images optimized</span>
                         <span id="xpm-optimizer-savings">Saved: 0 MB</span>
                     </div>
                 </div>
@@ -834,8 +765,8 @@ class XPM_Image_SEO_Admin {
             ?>
             <div class="notice notice-success is-dismissible">
                 <p>
-                    <strong><?php _e('XPM Image SEO activated!', 'xpm-image-seo'); ?></strong>
-                    <?php printf(__('Configure your settings in %s to get started.', 'xpm-image-seo'), '<a href="' . admin_url('options-general.php?page=xpm-image-seo-settings') . '">' . __('Settings', 'xpm-image-seo') . '</a>'); ?>
+                    <strong>XPM Image SEO activated!</strong>
+                    Configure your settings in <a href="<?php echo admin_url('options-general.php?page=xpm-image-seo-settings'); ?>">Settings</a> to get started.
                 </p>
             </div>
             <?php
@@ -848,8 +779,8 @@ class XPM_Image_SEO_Admin {
             ?>
             <div class="notice notice-warning">
                 <p>
-                    <strong><?php _e('XPM Image SEO:', 'xpm-image-seo'); ?></strong>
-                    <?php printf(__('Please configure your OpenAI API key in %s to enable alt text generation.', 'xpm-image-seo'), '<a href="' . admin_url('options-general.php?page=xpm-image-seo-settings') . '">' . __('Settings', 'xpm-image-seo') . '</a>'); ?>
+                    <strong>XPM Image SEO:</strong>
+                    Please configure your OpenAI API key in <a href="<?php echo admin_url('options-general.php?page=xpm-image-seo-settings'); ?>">Settings</a> to enable alt text generation.
                 </p>
             </div>
             <?php
@@ -952,7 +883,7 @@ class XPM_Image_SEO_Admin {
         if (preg_match('/src=["\']([^"\']+)["\']/', $html, $src_matches)) {
             $src = $src_matches[1];
             $html = str_replace($src_matches[0], 'src="' . $placeholder . '" data-src="' . $src . '"', $html);
-            $html = str_replace('<img ', '<img class="xmp-lazy" loading="lazy" ', $html);
+            $html = str_replace('<img ', '<img class="xpm-lazy" loading="lazy" ', $html);
         }
         
         return $html;

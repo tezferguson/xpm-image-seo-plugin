@@ -1,8 +1,92 @@
 /**
- * XPM Image SEO Admin Styles - Complete Version
+ * XPM Image SEO Admin Styles - COMPLETE VERSION WITH WOOCOMMERCE TABS
  */
 
-/* Branding */
+/* ==========================================================================
+   WOOCOMMERCE-STYLE TABS
+   ========================================================================== */
+
+.xpm-nav-tab-wrapper {
+    border-bottom: 1px solid #ccd0d4;
+    margin: 0 0 20px 0;
+    padding-left: 10px;
+    background: #f1f1f1;
+    overflow: hidden;
+}
+
+.xpm-nav-tab-wrapper::after {
+    content: '';
+    display: table;
+    clear: both;
+}
+
+.xpm-nav-tab-wrapper .nav-tab {
+    float: left;
+    border: 1px solid #ccd0d4;
+    border-bottom: none;
+    margin-left: 0.5em;
+    margin-bottom: -1px;
+    padding: 10px 15px;
+    font-size: 13px;
+    line-height: 1.4;
+    background: #e4e4e4;
+    color: #555;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.xpm-nav-tab-wrapper .nav-tab:hover {
+    background-color: #f9f9f9;
+    color: #464646;
+    border-color: #999;
+}
+
+.xpm-nav-tab-wrapper .nav-tab-active,
+.xpm-nav-tab-wrapper .nav-tab-active:hover,
+.xpm-nav-tab-wrapper .nav-tab-active:focus {
+    background-color: #fff;
+    border-bottom-color: #fff;
+    color: #000;
+    font-weight: 600;
+    box-shadow: none;
+    outline: none;
+    z-index: 1;
+}
+
+.xpm-tab-content {
+    display: none;
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-top: none;
+    margin-top: -1px;
+    padding: 0;
+    min-height: 400px;
+}
+
+.xpm-tab-content.active {
+    display: block;
+}
+
+.xpm-tab-content .form-table {
+    margin: 20px;
+    background: #fff;
+}
+
+.xpm-tab-content .submit {
+    margin: 0 20px 20px 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+/* ==========================================================================
+   BRANDING & LAYOUT
+   ========================================================================== */
+
 .xpm-brand {
     font-size: 14px;
     font-weight: normal;
@@ -22,7 +106,7 @@
 .xpm-settings-container {
     display: flex;
     gap: 30px;
-    margin-top: 20px;
+    margin-top: 0;
 }
 
 .xpm-settings-main {
@@ -61,6 +145,8 @@
 /* Enhanced settings sections */
 .form-table th {
     width: 200px;
+    vertical-align: top;
+    padding-top: 20px;
 }
 
 .form-table td {
@@ -71,10 +157,16 @@
     margin-top: 0;
     margin-bottom: 10px;
     color: #23282d;
+    font-size: 16px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
 }
 
-/* Bulk update interface */
-.xpm-bulk-controls {
+/* ==========================================================================
+   BULK UPDATE & OPTIMIZER INTERFACES
+   ========================================================================== */
+
+.xpm-bulk-controls, .xpm-optimizer-controls {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -83,12 +175,12 @@
     box-shadow: 0 1px 1px rgba(0,0,0,0.04);
 }
 
-.xpm-bulk-controls button {
+.xpm-bulk-controls button, .xpm-optimizer-controls button {
     margin-right: 15px;
     position: relative;
 }
 
-.xpm-bulk-controls .dashicons {
+.xpm-bulk-controls .dashicons, .xpm-optimizer-controls .dashicons {
     margin-right: 5px;
     vertical-align: middle;
 }
@@ -238,28 +330,6 @@
     margin-bottom: 8px;
 }
 
-/* Image Optimizer Specific Styles */
-.xpm-optimizer-controls {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: 1px solid #dee2e6;
-    border-radius: 12px;
-    padding: 25px;
-    margin: 20px 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
-}
-
-.xpm-optimizer-controls button {
-    margin-right: 15px;
-    margin-bottom: 10px;
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.xpm-optimizer-controls button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
 /* Statistics Grid */
 .xpm-stats-grid {
     display: grid;
@@ -299,25 +369,6 @@
     font-weight: bold;
     color: #0073aa;
     line-height: 1.2;
-}
-
-/* Optimizer File Info */
-.optimizer-file-info .file-size {
-    font-weight: bold;
-    color: #dc3545;
-}
-
-.optimizer-file-info .dimensions {
-    color: #6c757d;
-}
-
-.optimizer-file-info .format {
-    background: #e9ecef;
-    color: #495057;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-    margin-right: 5px;
 }
 
 /* Status badge system */
@@ -373,90 +424,6 @@
     border: 2px solid #fff;
     box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     padding: 0;
-}
-
-/* Before/After Size Display */
-.size-comparison {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 8px 0;
-    padding: 6px 8px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    font-size: 11px;
-}
-
-.size-before {
-    color: #dc3545;
-    font-weight: bold;
-}
-
-.size-after {
-    color: #28a745;
-    font-weight: bold;
-}
-
-.size-savings {
-    background: #28a745;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
-    font-size: 10px;
-}
-
-/* Processing Animation Overlay */
-.xpm-image-preview.processing, .xpm-optimizer-item.processing {
-    border-color: #0073aa !important;
-    box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.2), 0 6px 12px rgba(0,115,170,0.15) !important;
-    transform: scale(1.02);
-}
-
-.xpm-image-preview.processing::before, .xpm-optimizer-item.processing::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, transparent 30%, rgba(0,115,170,0.1) 50%, transparent 70%);
-    animation: shimmer 2s infinite;
-    pointer-events: none;
-}
-
-.xpm-image-preview.processing::after, .xpm-optimizer-item.processing::after {
-    content: "⟳";
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
-    color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    animation: xpm-spin 1s linear infinite;
-    z-index: 10;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-@keyframes xpm-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(0.95); }
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
 }
 
 /* Enhanced results log */
@@ -575,60 +542,9 @@
     pointer-events: none;
 }
 
-/* File Type Icons */
-.format-icon {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 20px;
-    margin-right: 5px;
-    vertical-align: middle;
-}
-
-.format-icon.jpeg {
-    background: #ff6b6b;
-}
-
-.format-icon.png {
-    background: #4ecdc4;
-}
-
-.format-icon.webp {
-    background: #a8e6cf;
-    color: #333;
-}
-
-.format-icon.gif {
-    background: #ffd93d;
-    color: #333;
-}
-
-/* Backup and Restore Elements */
-.backup-indicator {
-    display: inline-block;
-    background: #17a2b8;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-    margin-left: 5px;
-}
-
-.webp-indicator {
-    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-    margin-left: 5px;
-}
+/* ==========================================================================
+   FORM ELEMENTS & CONTROLS
+   ========================================================================== */
 
 /* Compression Quality Slider */
 .compression-slider {
@@ -642,30 +558,76 @@
     font-size: 16px;
 }
 
-/* Loading States */
-.optimizer-loading {
-    position: relative;
-    opacity: 0.7;
+/* Processing Animation Overlay */
+.xpm-image-preview.processing, .xpm-optimizer-item.processing {
+    border-color: #0073aa !important;
+    box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.2), 0 6px 12px rgba(0,115,170,0.15) !important;
+    transform: scale(1.02);
+}
+
+.xpm-image-preview.processing::before, .xpm-optimizer-item.processing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(0,115,170,0.1) 50%, transparent 70%);
+    animation: shimmer 2s infinite;
     pointer-events: none;
 }
 
-.optimizer-loading::after {
-    content: '';
+.xpm-image-preview.processing::after, .xpm-optimizer-item.processing::after {
+    content: "⟳";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #0073aa;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #0073aa 0%, #005a87 100%);
+    color: white;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
     animation: xpm-spin 1s linear infinite;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Enhanced Responsive Design */
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes xpm-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(0.95); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
 @media (max-width: 1200px) {
-    .xpm-settings-container {
+    .xpm-log-entry:hover {
+        background-color: #3c434a;
+    }
+    
+    .size-comparison {
+        background: #3c434a;
+    }
+}pm-settings-container {
         flex-direction: column;
     }
     
@@ -684,6 +646,23 @@
 }
 
 @media (max-width: 768px) {
+    .xpm-nav-tab-wrapper {
+        padding-left: 0;
+    }
+    
+    .xpm-nav-tab-wrapper .nav-tab {
+        float: none;
+        display: block;
+        margin: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .xpm-nav-tab-wrapper .nav-tab:first-child {
+        border-top: none;
+    }
+    
     #xpm-images-preview, #xpm-optimizer-preview {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
         gap: 12px;
@@ -729,20 +708,27 @@
     }
 }
 
-/* Accessibility improvements */
+/* ==========================================================================
+   ACCESSIBILITY & REDUCED MOTION
+   ========================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
     .xpm-image-preview,
     .xpm-optimizer-item,
     .status-badge,
     .optimizer-status,
     #xpm-progress-fill,
-    #xpm-optimizer-progress-fill {
+    #xpm-optimizer-progress-fill,
+    .nav-tab {
         transition: none;
         animation: none;
     }
 }
 
-/* Dark mode support */
+/* ==========================================================================
+   DARK MODE SUPPORT
+   ========================================================================== */
+
 @media (prefers-color-scheme: dark) {
     .xpm-info-box,
     .xpm-bulk-controls,
@@ -750,7 +736,8 @@
     .xpm-results-header,
     .stat-card,
     .xpm-image-preview,
-    .xpm-optimizer-item {
+    .xpm-optimizer-item,
+    .xpm-tab-content {
         background: #2c3338;
         border-color: #3c434a;
         color: #e0e0e0;
@@ -769,6 +756,22 @@
         border-color: #3c434a;
     }
     
+    .xpm-nav-tab-wrapper {
+        background: #3c434a;
+    }
+    
+    .xpm-nav-tab-wrapper .nav-tab {
+        background: #2c3338;
+        border-color: #3c434a;
+        color: #a0a5aa;
+    }
+    
+    .xpm-nav-tab-wrapper .nav-tab-active {
+        background: #2c3338;
+        border-bottom-color: #2c3338;
+        color: #e0e0e0;
+    }
+    
     #xpm-results-log, #xpm-optimizer-log {
         background: #2c3338;
         border-color: #3c434a;
@@ -778,11 +781,4 @@
         border-bottom-color: #3c434a;
     }
     
-    .xpm-log-entry:hover {
-        background-color: #3c434a;
-    }
-    
-    .size-comparison {
-        background: #3c434a;
-    }
-}
+    .x
