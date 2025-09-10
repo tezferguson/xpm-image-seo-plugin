@@ -19,42 +19,50 @@ jQuery(document).ready(function($) {
     }
     
     /**
-     * Initialize Settings Page Tabs - NEW FUNCTION
+     * Initialize Settings Page Tabs - COMPLETELY FIXED VERSION
      */
     function initializeSettingsTabs() {
         console.log('XPM Image SEO: Initializing settings tabs');
         
-        // Tab switching functionality
-        $('.xpm-nav-tab-wrapper .nav-tab').on('click', function(e) {
+        // Get current tab from URL or default to alt_text
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentTab = urlParams.get('tab') || 'alt_text';
+        
+        console.log('Initial tab:', currentTab);
+        
+        // Force initial tab display
+        showTab(currentTab);
+        
+        // Tab switching functionality - prevent default completely
+        $('.xpm-nav-tab-wrapper .nav-tab').off('click').on('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
             
-            var targetTab = $(this).data('tab');
+            const targetTab = $(this).data('tab');
             console.log('Switching to tab:', targetTab);
             
-            // Remove active class from all tabs and content
-            $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
-            $('.xpm-tab-content').removeClass('active').hide();
-            
-            // Add active class to clicked tab and corresponding content
-            $(this).addClass('nav-tab-active');
-            $('#' + targetTab + '_content').addClass('active').show();
+            // Show the tab
+            showTab(targetTab);
             
             // Update URL without page reload
             if (history.replaceState) {
-                var url = new URL(window.location);
+                const url = new URL(window.location);
                 url.searchParams.set('tab', targetTab);
                 window.history.replaceState({}, '', url);
             }
+            
+            return false;
         });
         
         // Handle form submission for settings
-        $('#xmp-settings-form').on('submit', function(e) {
-            var $submitBtn = $(this).find('input[type=submit]');
+        $('#xpm-settings-form').on('submit', function(e) {
+            const $submitBtn = $(this).find('input[type=submit]');
             $submitBtn.prop('disabled', true);
             
             // Change button text based on active tab
-            var activeTab = $('.nav-tab-active').data('tab');
-            var buttonText = 'Saving...';
+            const activeTab = $('.nav-tab-active').data('tab');
+            let buttonText = 'Saving...';
             
             switch(activeTab) {
                 case 'alt_text':
@@ -65,6 +73,9 @@ jQuery(document).ready(function($) {
                     break;
                 case 'performance':
                     buttonText = 'Saving Performance Settings...';
+                    break;
+                case 'duplicator':
+                    buttonText = 'Saving Duplicator Settings...';
                     break;
             }
             
@@ -83,7 +94,7 @@ jQuery(document).ready(function($) {
         
         // Initialize custom placeholder field toggle
         $('select[name$="[lazy_loading_placeholder]"]').on('change', function() {
-            var customField = $('#custom-placeholder-field');
+            const customField = $('#custom-placeholder-field');
             if ($(this).val() === 'custom') {
                 customField.show();
             } else {
@@ -92,6 +103,38 @@ jQuery(document).ready(function($) {
         });
         
         console.log('Settings tabs initialized successfully');
+    }
+    
+    /**
+     * Show specific tab content - COMPLETELY FIXED
+     */
+    function showTab(tabName) {
+        console.log('Showing tab:', tabName);
+        
+        // Force hide ALL tab contents
+        $('.xpm-tab-content').each(function() {
+            $(this).removeClass('active').hide().css('display', 'none');
+        });
+        
+        // Remove all active nav classes
+        $('.xpm-nav-tab-wrapper .nav-tab').removeClass('nav-tab-active');
+        
+        // Show target tab content
+        const $targetContent = $('#' + tabName + '_content');
+        if ($targetContent.length > 0) {
+            $targetContent.addClass('active').show().css('display', 'block');
+            console.log('Tab content shown for:', tabName);
+        } else {
+            console.error('Tab content not found for:', tabName);
+            // Fallback to first tab
+            $('.xpm-tab-content').first().addClass('active').show().css('display', 'block');
+            tabName = 'alt_text';
+        }
+        
+        // Set active nav tab
+        $('.xpm-nav-tab-wrapper .nav-tab[data-tab="' + tabName + '"]').addClass('nav-tab-active');
+        
+        console.log('Active tab set to:', tabName);
     }
     
     /**
