@@ -2,7 +2,7 @@
 /**
  * Plugin Name: XPM Image SEO
  * Plugin URI: https://xploited.media/plugins/xpm-image-seo
- * Description: Complete image SEO and optimization solution. Generate AI-powered alt text with smart keywords, plus lossless image compression and resizing for better performance.
+ * Description: Complete image SEO and optimization solution. Generate AI-powered alt text with smart keywords, plus lossless image compression and resizing for better performance. Now includes post/page duplication for all post types with Elementor support.
  * Version: 1.1.0
  * Author: Xploited Media
  * Author URI: https://xploited.media
@@ -52,6 +52,9 @@ class XPM_Image_SEO {
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-ajax-handlers.php';
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-media-library.php';
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-admin.php';
+        
+        // NEW: Load post duplicator
+        require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-post-duplicator.php';
     }
     
     public function load_textdomain() {
@@ -85,7 +88,13 @@ class XPM_Image_SEO {
             'lazy_loading_threshold' => 200,
             'lazy_loading_placeholder' => 'blur',
             'lazy_loading_custom_placeholder' => '',
-            'lazy_loading_effect' => 'fade'
+            'lazy_loading_effect' => 'fade',
+            
+            // NEW: Post Duplicator Settings
+            'enable_post_duplicator' => 1,
+            'duplicate_status' => 'draft',
+            'duplicate_author' => 'current',
+            'duplicate_suffix' => 'Copy'
         );
         
         add_option($this->option_name, $default_options);
@@ -132,6 +141,12 @@ class XPM_Image_SEO {
         new XPM_AJAX_Handlers();
         new XPM_Media_Library_Integration();
         new XPM_Dashboard_Widget();
+        
+        // NEW: Initialize post duplicator
+        $options = get_option($this->option_name);
+        if (!isset($options['enable_post_duplicator']) || $options['enable_post_duplicator']) {
+            new XPM_Post_Duplicator();
+        }
         
         // Auto-processing hooks
         add_action('add_attachment', array($this, 'auto_optimize_on_upload'));
@@ -232,7 +247,7 @@ class XPM_Image_SEO {
 }
 
 /**
- * Dashboard widget for XPM Image SEO
+ * Dashboard widget for XPM Image SEO - UPDATED WITH DUPLICATOR STATS
  */
 class XPM_Dashboard_Widget {
     
@@ -279,6 +294,15 @@ class XPM_Dashboard_Widget {
             AND pm.meta_value = '1'
         ");
         
+        // NEW: Get duplication stats
+        $recent_duplicates = $wpdb->get_var("
+            SELECT COUNT(*) 
+            FROM {$wpdb->posts} 
+            WHERE post_title LIKE '%Copy%' 
+            AND post_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            AND post_status != 'trash'
+        ");
+        
         $alt_coverage = $total_images > 0 ? round(($images_with_alt / $total_images) * 100) : 0;
         $opt_coverage = $total_images > 0 ? round(($optimized_images / $total_images) * 100) : 0;
         
@@ -296,7 +320,9 @@ class XPM_Dashboard_Widget {
                 .xpm-progress-bar { background: #e0e0e0; height: 8px; border-radius: 4px; margin: 8px 0; }
                 .xpm-progress-fill { height: 100%; background: #46b450; border-radius: 4px; transition: width 0.3s; }
                 .xpm-dashboard-links { margin-top: 15px; }
-                .xpm-dashboard-links .button { margin-right: 10px; }
+                .xpm-dashboard-links .button { margin-right: 10px; margin-bottom: 5px; }
+                .xpm-feature-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; }
+                .xpm-feature-section h4 { margin: 0 0 10px 0; color: #0073aa; }
             </style>
             
             <div class="xpm-stat-box">
@@ -322,6 +348,17 @@ class XPM_Dashboard_Widget {
                 <div class="xpm-stat-label"><?php _e('Total Saved', 'xpm-image-seo'); ?></div>
             </div>
         </div>
+        
+        <!-- NEW: Duplicator stats -->
+        <?php if ($recent_duplicates > 0): ?>
+        <div class="xpm-feature-section">
+            <h4><?php _e('Post Duplicator', 'xpm-image-seo'); ?></h4>
+            <p style="margin: 0; font-size: 13px;">
+                <span class="dashicons dashicons-admin-page" style="color: #46b450;"></span>
+                <?php printf(__('%d posts/pages duplicated in the last 30 days', 'xpm-image-seo'), $recent_duplicates); ?>
+            </p>
+        </div>
+        <?php endif; ?>
         
         <div class="xpm-dashboard-links">
             <a href="<?php echo admin_url('upload.php?page=xpm-image-seo-bulk-update'); ?>" class="button button-primary button-small">

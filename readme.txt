@@ -1,52 +1,67 @@
 === XPM Image SEO ===
 Contributors: xploitedmedia
 Donate link: https://xploited.media/donate
-Tags: seo, accessibility, alt text, openai, ai, images, screen readers, bulk update
+Tags: seo, accessibility, alt text, openai, ai, images, screen readers, bulk update, duplicate posts, elementor
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Boost your website's SEO and accessibility with AI-powered alt text generation. Automatically create descriptive alt text for images using OpenAI's Vision API.
+Complete SEO solution: AI-powered alt text generation, image optimization, lazy loading, and powerful post/page duplication with full Elementor support.
 
 == Description ==
 
-**XPM Image SEO** is a powerful WordPress plugin developed by Xploited Media that leverages OpenAI's advanced Vision API to automatically generate SEO-optimized alt text for your images. Improve your website's accessibility, search engine rankings, and user experience with intelligent image descriptions.
+**XPM Image SEO** is a comprehensive WordPress plugin developed by Xploited Media that combines AI-powered image SEO, advanced optimization, and powerful content duplication features. Improve your website's accessibility, search engine rankings, performance, and workflow efficiency with one complete solution.
 
 🚀 **Key Features:**
 
-* **AI-Powered Alt Text Generation** - Uses OpenAI's GPT-4o-mini Vision API for accurate, contextual descriptions
-* **Bulk Update Tool** - Process hundreds of existing images without alt text in one go
-* **SEO Optimization** - Generates alt text specifically designed for search engine visibility
-* **Accessibility Compliance** - Helps meet WCAG guidelines for screen reader users
-* **Cost-Effective** - Optimized for minimal API usage while maintaining quality
-* **Customizable Prompts** - Tailor the AI's output to match your brand voice
-* **Real-Time Progress Tracking** - Monitor bulk updates with detailed logging
-* **Automatic Processing** - Optionally generate alt text for new uploads automatically
+**🤖 AI-Powered Alt Text Generation**
+* Uses OpenAI's GPT-4o-mini Vision API for accurate, contextual descriptions
+* Smart keyword integration from page content and global settings
+* Bulk update tool for processing hundreds of existing images
+* Customizable prompts for brand-specific voice
+* Automatic processing for new uploads
+
+**⚡ Image Optimization & Performance**
+* Lossless image compression with quality control
+* Automatic image resizing for optimal dimensions
+* WebP conversion for superior compression
+* Lazy loading with customizable effects and placeholders
+* Backup system for safe optimization
+
+**📄 Advanced Post Duplicator**
+* **NEW in v1.1:** Complete post/page duplication for all post types
+* **Full Elementor support** - duplicates all designs and settings perfectly
+* Support for ACF, Meta Box, Custom Fields Suite, and other plugins
+* Bulk duplication with progress tracking
+* Smart title generation with conflict resolution
+* Permission-based access control
 
 🎯 **Benefits:**
 
-* **Improve SEO Rankings** - Search engines better understand your images
+* **Improve SEO Rankings** - Search engines better understand your images and content
 * **Enhance Accessibility** - Make your site usable for visually impaired visitors  
-* **Save Time** - Automate the tedious task of writing alt text
+* **Boost Performance** - Optimized images and lazy loading improve page speed
+* **Save Time** - Automate alt text generation and quickly duplicate content
 * **Ensure Consistency** - AI-generated descriptions maintain quality standards
-* **Boost User Experience** - Better image context for all users
+* **Streamline Workflow** - Duplicate complex pages with all settings intact
 
 🔧 **Perfect For:**
 
 * E-commerce websites with large product catalogs
 * Photography and portfolio sites
 * News and blog websites
+* Agencies managing multiple client sites
 * Corporate websites requiring accessibility compliance
-* Any WordPress site wanting to improve SEO and accessibility
+* Any WordPress site wanting to improve SEO, performance, and workflow
 
 📋 **Requirements:**
 
 * WordPress 5.0 or higher
 * PHP 7.4 or higher  
-* OpenAI API key (get yours at https://platform.openai.com/api-keys)
+* OpenAI API key (for alt text generation)
 * cURL support (standard on most hosting providers)
 
 == Installation ==
@@ -57,79 +72,137 @@ Boost your website's SEO and accessibility with AI-powered alt text generation. 
    - Choose the zip file and click "Install Now"
    - Activate the plugin
 
-2. **Configure API Key:**
+2. **Configure Settings:**
    - Go to Settings > XPM Image SEO
-   - Enter your OpenAI API key
+   - Enter your OpenAI API key (for alt text generation)
+   - Configure optimization and duplicator settings
    - Save settings
 
 3. **Start Using:**
-   - For existing images: Go to Media > Bulk Alt Text Update
-   - For new uploads: Enable auto-generation in settings
+   - **Alt Text:** Go to Media > Bulk Alt Text Update for existing images
+   - **Optimization:** Go to Media > Image Optimizer for bulk optimization
+   - **Duplication:** Look for "Duplicate" links in your Posts/Pages lists
+   - **Auto-processing:** Enable auto-generation and optimization in settings
 
 == Frequently Asked Questions ==
 
 = Do I need an OpenAI API key? =
 
-Yes, this plugin requires an OpenAI API key to function. You can get one from https://platform.openai.com/api-keys. Make sure you have sufficient credits in your OpenAI account.
+The OpenAI API key is only required for AI-powered alt text generation. The image optimization, lazy loading, and post duplication features work independently without an API key.
 
-= How much does it cost to use? =
+= How much does the OpenAI integration cost? =
 
-The plugin uses OpenAI's GPT-4o-mini model, which is very cost-effective. Typical costs are around $0.001-0.003 per image, depending on image complexity. For example, processing 1000 images might cost $1-3 USD.
+The plugin uses OpenAI's GPT-4o-mini model, which is very cost-effective. Typical costs are around $0.001-0.003 per image. For example, processing 1000 images might cost $1-3 USD.
 
-= Can I customize how the alt text is generated? =
+= Does the post duplicator work with Elementor? =
 
-Absolutely! You can provide a custom prompt in the plugin settings to tailor the AI's output to your specific needs, brand voice, or industry requirements.
+Yes! The post duplicator has full Elementor support and will duplicate all page designs, widgets, settings, and custom CSS perfectly. It also supports other page builders like Beaver Builder, Divi, and Visual Composer.
 
-= Does it work with existing images? =
+= Can I duplicate WooCommerce products? =
 
-Yes! The bulk update tool scans your entire media library for images without alt text and allows you to process them in batches with real-time progress tracking.
+Absolutely! The duplicator works with all post types including WooCommerce products, custom post types, and preserves all custom fields and metadata.
 
-= Is it safe for my website? =
+= Will duplication affect my SEO? =
 
-Yes, the plugin includes comprehensive security measures, rate limiting, and error handling. All API calls are made securely, and your images are processed through OpenAI's secure API.
+All duplicated content is created as drafts by default, so it won't affect your SEO until you publish it. You can then edit the content to make it unique before publishing.
+
+= Does it work with custom fields and ACF? =
+
+Yes, the duplicator fully supports Advanced Custom Fields (ACF), Meta Box, Custom Fields Suite, and other custom field plugins. All field data is preserved during duplication.
+
+= Can I customize how duplication works? =
+
+Yes! You can configure the default status (draft/pending/private), author assignment, title suffix, and enable/disable the feature entirely in the settings.
 
 = Will it slow down my website? =
 
-No, the plugin processes images in the background and includes rate limiting to prevent server overload. The bulk update tool processes images one at a time to maintain site performance.
+No, all processing happens in the background with proper rate limiting. The lazy loading feature actually improves your site's performance by reducing initial page load times.
 
 = What image formats are supported? =
 
-The plugin works with all standard WordPress image formats (JPEG, PNG, GIF, WebP) that are supported by OpenAI's Vision API.
+The plugin works with all standard WordPress image formats (JPEG, PNG, GIF, WebP) for optimization and alt text generation.
 
-= Can I review alt text before it's applied? =
+= Can I review duplicated content before it goes live? =
 
-While the plugin applies alt text automatically, all changes are logged in the bulk update interface. You can always manually edit alt text in your WordPress media library after generation.
-
-= Does it work with multilingual sites? =
-
-The plugin interface supports translation, and you can customize prompts to generate alt text in different languages by specifying the language in your custom prompt.
+Yes, all duplicated posts are created as drafts by default, giving you full control over when and if they're published.
 
 == Screenshots ==
 
-1. **Settings Page** - Configure your OpenAI API key and customize generation behavior
+1. **Settings Page** - Configure AI alt text, optimization, lazy loading, and duplicator settings
 2. **Bulk Update Interface** - Scan and process multiple images with progress tracking  
-3. **Real-time Progress** - Monitor the bulk update process with detailed logging
-4. **Image Preview Grid** - See which images will be processed before starting
-5. **Successful Results** - View generated alt text and processing statistics
+3. **Image Optimizer** - Compress and optimize images with detailed statistics
+4. **Post Duplication** - Duplicate any post type with a single click
+5. **Elementor Support** - Perfect duplication of complex Elementor designs
+6. **Media Library Integration** - Enhanced media library with optimization status
+7. **Dashboard Widget** - Overview of all XPM features and statistics
 
 == Changelog ==
+
+= 1.1.0 =
+* **NEW:** Complete post/page duplicator with full Elementor support
+* **NEW:** Bulk post duplication with progress tracking
+* **NEW:** Support for all post types and custom fields
+* **NEW:** Advanced Custom Fields (ACF) duplication support
+* **NEW:** Configurable duplication settings and permissions
+* **IMPROVED:** Enhanced dashboard widget with duplication statistics
+* **IMPROVED:** Better admin interface with organized tabs
+* **IMPROVED:** Comprehensive page builder support (Elementor, Divi, Beaver Builder)
+* **FIXED:** Various minor bugs and performance improvements
 
 = 1.0.0 =
 * Initial release by Xploited Media
 * AI-powered alt text generation using OpenAI GPT-4o-mini
+* Advanced image optimization with WebP support
+* Lazy loading with customizable effects
 * Bulk update tool with progress tracking
+* Smart keyword integration for SEO
 * Customizable prompts for tailored output
 * Automatic generation for new uploads
 * Comprehensive error handling and logging
-* SEO and accessibility optimized descriptions
 * Rate limiting to prevent API overuse
 * Responsive admin interface
 * Security measures and input validation
 
 == Upgrade Notice ==
 
+= 1.1.0 =
+Major update adds powerful post/page duplication with full Elementor support! Configure the new duplicator settings in Settings > XPM Image SEO > Post Duplicator tab.
+
 = 1.0.0 =
 Welcome to XPM Image SEO! Configure your OpenAI API key in Settings > XPM Image SEO to start generating SEO-optimized alt text for your images.
+
+== Post Duplicator Features ==
+
+**🎨 Full Page Builder Support:**
+* **Elementor** - Complete duplication of designs, widgets, settings, and custom CSS
+* **Beaver Builder** - All modules and layout settings preserved
+* **Divi Builder** - Page builder content and configurations duplicated
+* **Visual Composer** - All VC elements and settings maintained
+* **Gutenberg** - Block content and metadata preserved
+
+**🔌 Plugin Compatibility:**
+* **Advanced Custom Fields (ACF)** - All field types and values duplicated
+* **Meta Box** - Custom fields and metadata preserved
+* **Custom Fields Suite** - Field data maintained during duplication
+* **Yoast SEO** - SEO settings and focus keywords duplicated
+* **RankMath** - SEO data and configurations preserved
+* **WooCommerce** - Product data, variations, and settings duplicated
+
+**⚡ Smart Features:**
+* **Bulk Duplication** - Select multiple posts and duplicate them all at once
+* **Unique Titles** - Automatically generates unique titles with customizable suffixes
+* **Permission Control** - Respects user capabilities and post type permissions
+* **Safe Defaults** - All duplicates created as drafts for review
+* **Progress Tracking** - Real-time feedback during bulk operations
+* **Error Handling** - Comprehensive error reporting and recovery
+
+**🎯 Use Cases:**
+* **Template Creation** - Duplicate complex pages to use as templates
+* **Content Variations** - Create similar content with different focuses
+* **A/B Testing** - Duplicate pages for testing different designs
+* **Staging Content** - Create draft versions for review and editing
+* **Multi-language Sites** - Duplicate content for translation
+* **Client Work** - Quickly replicate successful page designs
 
 == Developer Information ==
 
@@ -141,13 +214,14 @@ This plugin is developed and maintained by Xploited Media, a digital agency spec
 
 == Privacy & Data Usage ==
 
-This plugin sends image data to OpenAI's API for processing. Please review OpenAI's privacy policy at https://openai.com/privacy/. The plugin:
+This plugin sends image data to OpenAI's API only when generating alt text. Please review OpenAI's privacy policy at https://openai.com/privacy/. The plugin:
 
 * Sends images to OpenAI only when generating alt text
 * Does not store images on external servers
-* Logs alt text generation locally in your WordPress database
+* Logs alt text generation and optimization locally in your WordPress database
 * Does not collect personal user information
 * Allows you to control when and how images are processed
+* Post duplication happens entirely on your server - no external data transmission
 
 == Technical Notes ==
 
@@ -159,22 +233,33 @@ This plugin sends image data to OpenAI's API for processing. Please review OpenA
 
 **Performance:**  
 * Minimal impact on site performance
-* Background processing for new uploads
+* Background processing for new uploads and optimization
 * Efficient database queries for bulk operations
 * Responsive admin interface with modern JavaScript
+* Post duplication uses optimized database operations
 
 **Compatibility:**
 * WordPress 5.0+ 
 * PHP 7.4+
-* Works with popular page builders
-* Compatible with media management plugins
+* Works with popular page builders (Elementor, Divi, Beaver Builder, etc.)
+* Compatible with major SEO and custom field plugins
 * Supports WordPress multisite networks
+* Works with all public post types and custom post types
 
 **Security:**
 * Nonce verification for all AJAX requests
 * Capability checks for user permissions
 * Input sanitization and output escaping
 * Secure API communication with OpenAI
+* Safe post duplication with permission validation
+
+**Post Duplication Technical Details:**
+* **Deep Copy:** Duplicates all post meta, taxonomies, and relationships
+* **Elementor Support:** Preserves all Elementor data including page settings and CSS
+* **Custom Fields:** Handles serialized data and complex field structures
+* **Taxonomies:** Maintains category, tag, and custom taxonomy assignments
+* **Media:** Preserves featured images and media attachments
+* **Performance:** Optimized for bulk operations with progress tracking
 
 == Support ==
 
@@ -184,3 +269,12 @@ For support, feature requests, or custom development needs, visit [Xploited Medi
 * [Get OpenAI API Key](https://platform.openai.com/api-keys)
 * [WordPress Accessibility Guidelines](https://make.wordpress.org/accessibility/)
 * [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+* [Elementor Documentation](https://elementor.com/help/)
+
+**Feature Requests:**
+We're always improving XPM Image SEO! If you have suggestions for new features or improvements, please let us know through our website. Popular requests include:
+* Additional AI models for alt text generation
+* More image optimization formats
+* Advanced duplication filtering options
+* Custom post type specific settings
+* Integration with more page builders
