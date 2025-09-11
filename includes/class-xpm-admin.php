@@ -1,6 +1,6 @@
 <?php
 /**
- * XPM Image SEO Admin Interface - COMPLETE FIXED VERSION
+ * XPM Image SEO Admin Interface - COMPLETE FIXED VERSION WITH PNG TO JPEG CONVERSION
  * 
  * @package XPM_Image_SEO
  */
@@ -74,7 +74,7 @@ class XPM_Image_SEO_Admin {
     }
     
     /**
-     * Sanitize settings - FIXED VERSION WITH COMPLETE VALIDATION
+     * Sanitize settings - FIXED VERSION WITH COMPLETE VALIDATION INCLUDING PNG TO JPEG
      */
     public function sanitize_settings($input) {
         $sanitized = array();
@@ -159,6 +159,11 @@ class XPM_Image_SEO_Admin {
             $sanitized['convert_to_webp'] = intval($input['convert_to_webp']);
         }
         
+        // NEW: PNG to JPEG conversion setting
+        if (isset($input['convert_png_to_jpeg'])) {
+            $sanitized['convert_png_to_jpeg'] = intval($input['convert_png_to_jpeg']);
+        }
+        
         // Performance settings
         if (isset($input['enable_lazy_loading'])) {
             $sanitized['enable_lazy_loading'] = intval($input['enable_lazy_loading']);
@@ -184,7 +189,7 @@ class XPM_Image_SEO_Admin {
                 $input['lazy_loading_effect'] : 'fade';
         }
         
-        // NEW: Post Duplicator settings
+        // Post Duplicator settings
         if (isset($input['enable_post_duplicator'])) {
             $sanitized['enable_post_duplicator'] = intval($input['enable_post_duplicator']);
         }
@@ -243,7 +248,7 @@ class XPM_Image_SEO_Admin {
             'strings' => array(
                 'scanning' => __('Scanning...', 'xpm-image-seo'),
                 'no_images' => __('No images to update', 'xpm-image-seo'),
-                'stopped' => __('Bulk update stopped by user', 'xpm-image-seo'),
+                'stopped' => __('Bulk update stopped by user', 'xmp-image-seo'),
                 'completed' => __('Bulk update completed!', 'xpm-image-seo'),
                 'network_error' => __('Network error', 'xpm-image-seo'),
                 'scan_failed' => __('Failed to scan images', 'xpm-image-seo'),
@@ -287,7 +292,7 @@ class XPM_Image_SEO_Admin {
     }
     
     /**
-     * Display settings page with enhanced tabs - COMPLETELY FIXED VERSION
+     * Display settings page with enhanced tabs - COMPLETELY FIXED VERSION WITH PNG TO JPEG
      */
     public function display_settings_page() {
         $options = get_option($this->option_name);
@@ -481,6 +486,25 @@ class XPM_Image_SEO_Admin {
                                            value="1" <?php checked($options['convert_to_webp'] ?? 0, 1); ?> />
                                     <?php _e('Create WebP versions for better compression (if supported).', 'xpm-image-seo'); ?>
                                 </label>
+                            </td>
+                        </tr>
+                        
+                        <!-- NEW: PNG to JPEG Conversion -->
+                        <tr>
+                            <th scope="row"><?php _e('PNG to JPEG Conversion', 'xpm-image-seo'); ?></th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="<?php echo $this->option_name; ?>[convert_png_to_jpeg]" 
+                                           value="1" <?php checked($options['convert_png_to_jpeg'] ?? 0, 1); ?> />
+                                    <?php _e('Convert PNG images to high-quality JPEG for smaller file sizes.', 'xpm-image-seo'); ?>
+                                </label>
+                                <p class="description">
+                                    <strong style="color: #d63638;"><?php _e('⚠️ Important:', 'xpm-image-seo'); ?></strong>
+                                    <?php _e('Only PNGs without transparency will be converted. Images with transparent backgrounds will be automatically skipped to prevent visual issues on your website.', 'xpm-image-seo'); ?>
+                                </p>
+                                <p class="description">
+                                    <?php _e('This can significantly reduce file sizes for photos and complex images. Original PNG files will be backed up before conversion.', 'xpm-image-seo'); ?>
+                                </p>
                             </td>
                         </tr>
                     </table>

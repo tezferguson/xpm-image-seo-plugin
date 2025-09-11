@@ -1,6 +1,6 @@
 <?php
 /**
- * XPM Image SEO Image Optimizer - COMPLETE ALL SIZES VERSION
+ * XPM Image SEO Image Optimizer - COMPLETE ALL SIZES VERSION WITH PNG TO JPEG CONVERSION
  * 
  * @package XPM_Image_SEO
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Handle image optimization functionality - Optimizes ALL image sizes
+ * Handle image optimization functionality - Optimizes ALL image sizes with PNG to JPEG conversion
  */
 class XPM_Image_Optimizer {
     
@@ -74,7 +74,144 @@ class XPM_Image_Optimizer {
     }
     
     /**
-     * Optimize single image and ALL its sizes - COMPLETE VERSION
+     * Check if PNG has transparency
+     */
+    private function png_has_transparency($file_path) {
+        try {
+            // Try with Imagick first (more reliable)
+            if (extension_loaded('imagick') && class_exists('Imagick')) {
+                $imagick = new Imagick($file_path);
+                $has_alpha = $imagick->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_UNDEFINED;
+                
+                if ($has_alpha) {
+                    // Check if alpha channel is actually used
+                    $histogram = $imagick->getImageHistogram();
+                    foreach ($histogram as $pixel) {
+                        if ($pixel->getColorValue(Imagick::COLOR_ALPHA) < 1.0) {
+                            $imagick->destroy();
+                            return true; // Has transparency
+                        }
+                    }
+                }
+                
+                $imagick->destroy();
+                return false;
+            }
+            
+            // Fallback to GD
+            if (extension_loaded('gd')) {
+                $image = imagecreatefrompng($file_path);
+                if (!$image) {
+                    return true; // Assume has transparency if can't read
+                }
+                
+                $width = imagesx($image);
+                $height = imagesy($image);
+                
+                // Sample check - check every 10th pixel to avoid performance issues
+                for ($x = 0; $x < $width; $x += 10) {
+                    for ($y = 0; $y < $height; $y += 10) {
+                        $rgba = imagecolorat($image, $x, $y);
+                        $alpha = ($rgba & 0x7F000000) >> 24;
+                        
+                        if ($alpha > 0) {
+                            imagedestroy($image);
+                            return true; // Has transparency
+                        }
+                    }
+                }
+                
+                imagedestroy($image);
+                return false;
+            }
+            
+            // If no image libraries available, assume has transparency for safety
+            return true;
+            
+        } catch (Exception $e) {
+            error_log('PNG transparency check failed: ' . $e->getMessage());
+            return true; // Assume has transparency on error for safety
+        }
+    }
+    
+    /**
+     * Convert PNG to JPEG if it doesn't have transparency
+     */
+    private function convert_png_to_jpeg($file_path, $quality = 85) {
+        try {
+            // First check if PNG has transparency
+            if ($this->png_has_transparency($file_path)) {
+                error_log("PNG to JPEG conversion skipped: image has transparency - $file_path");
+                return false; // Skip conversion to preserve transparency
+            }
+            
+            $file_info = pathinfo($file_path);
+            $jpeg_path = $file_info['dirname'] . '/' . $file_info['filename'] . '.jpg';
+            
+            // Convert using Imagick if available
+            if (extension_loaded('imagick') && class_exists('Imagick')) {
+                $imagick = new Imagick($file_path);
+                
+                // Set white background for PNG conversion
+                $imagick->setImageBackgroundColor('#ffffff');
+                $imagick->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+                $imagick->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+                
+                // Convert to JPEG
+                $imagick->setImageFormat('jpeg');
+                $imagick->setImageCompressionQuality($quality);
+                $imagick->setInterlaceScheme(Imagick::INTERLACE_PLANE);
+                $imagick->setImageCompression(Imagick::COMPRESSION_JPEG);
+                
+                $success = $imagick->writeImage($jpeg_path);
+                $imagick->destroy();
+                
+                if ($success && file_exists($jpeg_path)) {
+                    error_log("PNG to JPEG conversion successful: $file_path -> $jpeg_path");
+                    return $jpeg_path;
+                }
+            }
+            
+            // Fallback to GD
+            if (extension_loaded('gd')) {
+                $png_image = imagecreatefrompng($file_path);
+                if (!$png_image) {
+                    return false;
+                }
+                
+                $width = imagesx($png_image);
+                $height = imagesy($png_image);
+                
+                // Create a white background
+                $jpeg_image = imagecreatetruecolor($width, $height);
+                $white = imagecolorallocate($jpeg_image, 255, 255, 255);
+                imagefill($jpeg_image, 0, 0, $white);
+                
+                // Copy PNG onto white background
+                imagecopy($jpeg_image, $png_image, 0, 0, 0, 0, $width, $height);
+                
+                // Save as JPEG
+                $success = imagejpeg($jpeg_image, $jpeg_path, $quality);
+                
+                imagedestroy($png_image);
+                imagedestroy($jpeg_image);
+                
+                if ($success && file_exists($jpeg_path)) {
+                    error_log("PNG to JPEG conversion successful (GD): $file_path -> $jpeg_path");
+                    return $jpeg_path;
+                }
+            }
+            
+            return false;
+            
+        } catch (Exception $e) {
+            error_log('PNG to JPEG conversion failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Optimize single image and ALL its sizes - COMPLETE VERSION WITH PNG TO JPEG
      */
     public function optimize_single_image($attachment_id) {
         error_log("=== XPM COMPLETE Optimization Debug Start for ID: $attachment_id ===");
@@ -111,6 +248,8 @@ class XPM_Image_Optimizer {
         $total_original_size = 0;
         $total_optimized_size = 0;
         $optimized_sizes_count = 0;
+        $png_converted_to_jpeg = false;
+        $converted_file_path = $file_path;
         
         try {
             // Create backup if enabled
@@ -128,6 +267,58 @@ class XPM_Image_Optimizer {
             
             list($width, $height, $type) = $image_info;
             error_log("Original dimensions: {$width}x{$height}, Type: $type");
+            
+            // NEW: Check for PNG to JPEG conversion
+            if (!empty($options['convert_png_to_jpeg']) && $type === IMAGETYPE_PNG) {
+                error_log("=== PNG TO JPEG CONVERSION CHECK ===");
+                
+                $quality = intval($options['compression_quality'] ?? 85);
+                $jpeg_path = $this->convert_png_to_jpeg($file_path, $quality);
+                
+                if ($jpeg_path && file_exists($jpeg_path)) {
+                    error_log("PNG to JPEG conversion successful: $jpeg_path");
+                    
+                    // Replace the original PNG with JPEG
+                    if (unlink($file_path) && rename($jpeg_path, $file_path)) {
+                        // Update the file extension in WordPress
+                        $new_file_path = preg_replace('/\.png$/i', '.jpg', $file_path);
+                        if (rename($file_path, $new_file_path)) {
+                            $converted_file_path = $new_file_path;
+                            $png_converted_to_jpeg = true;
+                            
+                            // Update WordPress attachment data
+                            update_attached_file($attachment_id, $converted_file_path);
+                            
+                            // Update post data
+                            $attachment = get_post($attachment_id);
+                            if ($attachment) {
+                                $new_filename = basename($converted_file_path);
+                                wp_update_post(array(
+                                    'ID' => $attachment_id,
+                                    'post_title' => preg_replace('/\.png$/i', '', $attachment->post_title),
+                                    'post_name' => preg_replace('/\.png$/i', '', $attachment->post_name),
+                                    'guid' => str_replace('.png', '.jpg', $attachment->guid)
+                                ));
+                            }
+                            
+                            // Update MIME type
+                            wp_update_post(array(
+                                'ID' => $attachment_id,
+                                'post_mime_type' => 'image/jpeg'
+                            ));
+                            
+                            // Update file path and get new image info
+                            $file_path = $converted_file_path;
+                            $image_info = getimagesize($file_path);
+                            $type = IMAGETYPE_JPEG;
+                            
+                            error_log("PNG to JPEG conversion completed: $file_path");
+                        }
+                    }
+                } else {
+                    error_log("PNG to JPEG conversion skipped or failed");
+                }
+            }
             
             $max_width = intval($options['max_width'] ?? 2048);
             $max_height = intval($options['max_height'] ?? 2048);
@@ -205,6 +396,7 @@ class XPM_Image_Optimizer {
             error_log("Total original size: " . $total_original_size . " bytes (" . size_format($total_original_size) . ")");
             error_log("Total optimized size: " . $total_optimized_size . " bytes (" . size_format($total_optimized_size) . ")");
             error_log("Total savings: " . $total_savings . " bytes (" . $savings_percent . "%)");
+            error_log("PNG to JPEG converted: " . ($png_converted_to_jpeg ? 'YES' : 'NO'));
             
             // CRITICAL: Force complete WordPress refresh
             $this->force_complete_refresh($attachment_id, $file_path);
@@ -221,6 +413,10 @@ class XPM_Image_Optimizer {
             if ($resized) {
                 update_post_meta($attachment_id, '_xpm_resized', 1);
                 update_post_meta($attachment_id, '_xpm_original_dimensions', $width . 'x' . $height);
+            }
+            
+            if ($png_converted_to_jpeg) {
+                update_post_meta($attachment_id, '_xpm_png_converted', 1);
             }
             
             if ($webp_path) {
@@ -243,6 +439,7 @@ class XPM_Image_Optimizer {
                 'backup_created' => $backup_created,
                 'webp_created' => !empty($webp_path),
                 'webp_path' => $webp_path,
+                'png_converted_to_jpeg' => $png_converted_to_jpeg,
                 'processing_time' => $processing_time,
                 'sizes_optimized' => $optimized_sizes_count,
                 'final_url' => wp_get_attachment_url($attachment_id)
@@ -805,6 +1002,7 @@ class XPM_Image_Optimizer {
             delete_post_meta($attachment_id, '_xpm_bytes_saved');
             delete_post_meta($attachment_id, '_xpm_resized');
             delete_post_meta($attachment_id, '_xpm_webp_path');
+            delete_post_meta($attachment_id, '_xpm_png_converted');
             delete_post_meta($attachment_id, '_xpm_optimization_date');
             delete_post_meta($attachment_id, '_xpm_processing_time');
             delete_post_meta($attachment_id, '_xpm_sizes_optimized');

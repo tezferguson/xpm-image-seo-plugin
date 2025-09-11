@@ -53,7 +53,7 @@ class XPM_Image_SEO {
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-media-library.php';
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-admin.php';
         
-        // NEW: Load post duplicator
+        // Load post duplicator
         require_once XPM_IMAGE_SEO_PLUGIN_DIR . 'includes/class-xpm-post-duplicator.php';
     }
     
@@ -82,15 +82,16 @@ class XPM_Image_SEO {
             'max_height' => 2048,
             'backup_originals' => 1,
             'convert_to_webp' => 0,
+            'convert_png_to_jpeg' => 0, // NEW: PNG to JPEG conversion (disabled by default)
             
-            // Performance Settings (NEW: Lazy Loading)
+            // Performance Settings
             'enable_lazy_loading' => 0,
             'lazy_loading_threshold' => 200,
             'lazy_loading_placeholder' => 'blur',
             'lazy_loading_custom_placeholder' => '',
             'lazy_loading_effect' => 'fade',
             
-            // NEW: Post Duplicator Settings
+            // Post Duplicator Settings
             'enable_post_duplicator' => 1,
             'duplicate_status' => 'draft',
             'duplicate_author' => 'current',
@@ -142,7 +143,7 @@ class XPM_Image_SEO {
         new XPM_Media_Library_Integration();
         new XPM_Dashboard_Widget();
         
-        // NEW: Initialize post duplicator
+        // Initialize post duplicator
         $options = get_option($this->option_name);
         if (!isset($options['enable_post_duplicator']) || $options['enable_post_duplicator']) {
             new XPM_Post_Duplicator();
@@ -294,7 +295,18 @@ class XPM_Dashboard_Widget {
             AND pm.meta_value = '1'
         ");
         
-        // NEW: Get duplication stats
+        // Get PNG to JPEG conversions
+        $png_converted = $wpdb->get_var("
+            SELECT COUNT(DISTINCT p.ID) 
+            FROM {$wpdb->posts} p 
+            INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
+            WHERE p.post_type = 'attachment' 
+            AND p.post_mime_type LIKE 'image/%'
+            AND pm.meta_key = '_xpm_png_converted' 
+            AND pm.meta_value = '1'
+        ");
+        
+        // Get duplication stats
         $recent_duplicates = $wpdb->get_var("
             SELECT COUNT(*) 
             FROM {$wpdb->posts} 
@@ -349,7 +361,18 @@ class XPM_Dashboard_Widget {
             </div>
         </div>
         
-        <!-- NEW: Duplicator stats -->
+        <!-- PNG to JPEG conversions -->
+        <?php if ($png_converted > 0): ?>
+        <div class="xpm-feature-section">
+            <h4><?php _e('PNG to JPEG Conversions', 'xpm-image-seo'); ?></h4>
+            <p style="margin: 0; font-size: 13px;">
+                <span class="dashicons dashicons-format-image" style="color: #46b450;"></span>
+                <?php printf(__('%d PNG images converted to JPEG for better compression', 'xpm-image-seo'), $png_converted); ?>
+            </p>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Duplicator stats -->
         <?php if ($recent_duplicates > 0): ?>
         <div class="xpm-feature-section">
             <h4><?php _e('Post Duplicator', 'xpm-image-seo'); ?></h4>
